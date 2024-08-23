@@ -27,12 +27,14 @@ func main() {
 
 	//repos
 	groupRepo := repository.NewGroupRepository(db)
+	collRepo := repository.NewCollectionRepository(db)
 
 	//services
 	groupService := service.NewGroupService(groupRepo)
+	collService := service.NewCollectionService(collRepo)
 
 	//graphServer
-	graphQLServer := startGraphQLServer(port, groupService)
+	graphQLServer := startGraphQLServer(port, groupService, collService)
 
 	//shut down
 	waitForShutDown(graphQLServer)
@@ -44,7 +46,7 @@ func loadEnv() {
 	}
 }
 
-func startGraphQLServer(port string, groupService *service.GroupService) *http.Server {
+func startGraphQLServer(port string, groupService *service.GroupService, collService *service.CollectionService) *http.Server {
 	gqlMux := http.NewServeMux()
 
 	gqlMux.Handle("/", playground.Handler("GraphQL playground", "/query"))
@@ -52,6 +54,7 @@ func startGraphQLServer(port string, groupService *service.GroupService) *http.S
 	gqlMux.Handle("/query", handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{
 		Resolvers: &graph.Resolver{
 			GroupService: groupService,
+			CollService:  collService,
 		},
 	})))
 

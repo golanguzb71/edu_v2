@@ -8,4 +8,5 @@ import "edu_v2/internal/service"
 
 type Resolver struct {
 	GroupService *service.GroupService
+	CollService  *service.CollectionService
 }

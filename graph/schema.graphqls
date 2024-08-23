@@ -23,22 +23,23 @@ type Response {
     message: String!
 }
 
-type Collections {
+type Collection {
     id :ID!
     title :String!
-    imageUrl:String!
+    imageUrl: [String!]
     createdAt:String!
 }
 
 type Query {
     getGroups(byId: ID, orderByLevel: Boolean): [Group!]
-    getCollection(byId:ID):[Collections!]!
+    getCollection:[Collection!]!
+    getCollectionById(collectionId:ID!):Collection!
 }
 
 
 type Mutation {
-    createCollection(name: String!, file: Upload): Response!
-    updateCollection(id: ID!, name: String!): Response!
+    createCollection(name: String!, file: [Upload!]!): Response!
+    updateCollection(id: ID!, name: String! , file: [Upload]): Response!
     deleteCollection(id: ID!): Response!
     createGroup(name: String!, teacherName: String!, level: GroupLevel!): Response!
     updateGroup(id: ID!, name: String!, teacherName: String!, level: GroupLevel!): Response!

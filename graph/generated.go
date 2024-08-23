@@ -47,7 +47,7 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
-	Collections struct {
+	Collection struct {
 		CreatedAt func(childComplexity int) int
 		ID        func(childComplexity int) int
 		ImageURL  func(childComplexity int) int
@@ -63,17 +63,18 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateCollection func(childComplexity int, name string, file *graphql.Upload) int
+		CreateCollection func(childComplexity int, name string, file []*graphql.Upload) int
 		CreateGroup      func(childComplexity int, name string, teacherName string, level model.GroupLevel) int
 		DeleteCollection func(childComplexity int, id string) int
 		DeleteGroup      func(childComplexity int, id string) int
-		UpdateCollection func(childComplexity int, id string, name string) int
+		UpdateCollection func(childComplexity int, id string, name string, file []*graphql.Upload) int
 		UpdateGroup      func(childComplexity int, id string, name string, teacherName string, level model.GroupLevel) int
 	}
 
 	Query struct {
-		GetCollection func(childComplexity int, byID *string) int
-		GetGroups     func(childComplexity int, byID *string, orderByLevel *bool) int
+		GetCollection     func(childComplexity int) int
+		GetCollectionByID func(childComplexity int, collectionID string) int
+		GetGroups         func(childComplexity int, byID *string, orderByLevel *bool) int
 	}
 
 	Response struct {
@@ -83,8 +84,8 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	CreateCollection(ctx context.Context, name string, file *graphql.Upload) (*model.Response, error)
-	UpdateCollection(ctx context.Context, id string, name string) (*model.Response, error)
+	CreateCollection(ctx context.Context, name string, file []*graphql.Upload) (*model.Response, error)
+	UpdateCollection(ctx context.Context, id string, name string, file []*graphql.Upload) (*model.Response, error)
 	DeleteCollection(ctx context.Context, id string) (*model.Response, error)
 	CreateGroup(ctx context.Context, name string, teacherName string, level model.GroupLevel) (*model.Response, error)
 	UpdateGroup(ctx context.Context, id string, name string, teacherName string, level model.GroupLevel) (*model.Response, error)
@@ -92,7 +93,8 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	GetGroups(ctx context.Context, byID *string, orderByLevel *bool) ([]*model.Group, error)
-	GetCollection(ctx context.Context, byID *string) ([]*model.Collections, error)
+	GetCollection(ctx context.Context) ([]*model.Collection, error)
+	GetCollectionByID(ctx context.Context, collectionID string) (*model.Collection, error)
 }
 
 type executableSchema struct {
@@ -114,33 +116,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
-	case "Collections.createdAt":
-		if e.complexity.Collections.CreatedAt == nil {
+	case "Collection.createdAt":
+		if e.complexity.Collection.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.Collections.CreatedAt(childComplexity), true
+		return e.complexity.Collection.CreatedAt(childComplexity), true
 
-	case "Collections.id":
-		if e.complexity.Collections.ID == nil {
+	case "Collection.id":
+		if e.complexity.Collection.ID == nil {
 			break
 		}
 
-		return e.complexity.Collections.ID(childComplexity), true
+		return e.complexity.Collection.ID(childComplexity), true
 
-	case "Collections.imageUrl":
-		if e.complexity.Collections.ImageURL == nil {
+	case "Collection.imageUrl":
+		if e.complexity.Collection.ImageURL == nil {
 			break
 		}
 
-		return e.complexity.Collections.ImageURL(childComplexity), true
+		return e.complexity.Collection.ImageURL(childComplexity), true
 
-	case "Collections.title":
-		if e.complexity.Collections.Title == nil {
+	case "Collection.title":
+		if e.complexity.Collection.Title == nil {
 			break
 		}
 
-		return e.complexity.Collections.Title(childComplexity), true
+		return e.complexity.Collection.Title(childComplexity), true
 
 	case "Group.createdAt":
 		if e.complexity.Group.CreatedAt == nil {
@@ -187,7 +189,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateCollection(childComplexity, args["name"].(string), args["file"].(*graphql.Upload)), true
+		return e.complexity.Mutation.CreateCollection(childComplexity, args["name"].(string), args["file"].([]*graphql.Upload)), true
 
 	case "Mutation.createGroup":
 		if e.complexity.Mutation.CreateGroup == nil {
@@ -235,7 +237,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateCollection(childComplexity, args["id"].(string), args["name"].(string)), true
+		return e.complexity.Mutation.UpdateCollection(childComplexity, args["id"].(string), args["name"].(string), args["file"].([]*graphql.Upload)), true
 
 	case "Mutation.updateGroup":
 		if e.complexity.Mutation.UpdateGroup == nil {
@@ -254,12 +256,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_getCollection_args(context.TODO(), rawArgs)
+		return e.complexity.Query.GetCollection(childComplexity), true
+
+	case "Query.getCollectionById":
+		if e.complexity.Query.GetCollectionByID == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getCollectionById_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.GetCollection(childComplexity, args["byId"].(*string)), true
+		return e.complexity.Query.GetCollectionByID(childComplexity, args["collectionId"].(string)), true
 
 	case "Query.getGroups":
 		if e.complexity.Query.GetGroups == nil {
@@ -422,10 +431,10 @@ func (ec *executionContext) field_Mutation_createCollection_args(ctx context.Con
 		}
 	}
 	args["name"] = arg0
-	var arg1 *graphql.Upload
+	var arg1 []*graphql.Upload
 	if tmp, ok := rawArgs["file"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("file"))
-		arg1, err = ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, tmp)
+		arg1, err = ec.unmarshalNUpload2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUploadᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -518,6 +527,15 @@ func (ec *executionContext) field_Mutation_updateCollection_args(ctx context.Con
 		}
 	}
 	args["name"] = arg1
+	var arg2 []*graphql.Upload
+	if tmp, ok := rawArgs["file"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("file"))
+		arg2, err = ec.unmarshalOUpload2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["file"] = arg2
 	return args, nil
 }
 
@@ -578,18 +596,18 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_getCollection_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_getCollectionById_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *string
-	if tmp, ok := rawArgs["byId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("byId"))
-		arg0, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+	var arg0 string
+	if tmp, ok := rawArgs["collectionId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("collectionId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["byId"] = arg0
+	args["collectionId"] = arg0
 	return args, nil
 }
 
@@ -655,8 +673,8 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Collections_id(ctx context.Context, field graphql.CollectedField, obj *model.Collections) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Collections_id(ctx, field)
+func (ec *executionContext) _Collection_id(ctx context.Context, field graphql.CollectedField, obj *model.Collection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Collection_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -686,9 +704,9 @@ func (ec *executionContext) _Collections_id(ctx context.Context, field graphql.C
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Collections_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Collection_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Collections",
+		Object:     "Collection",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -699,8 +717,8 @@ func (ec *executionContext) fieldContext_Collections_id(_ context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Collections_title(ctx context.Context, field graphql.CollectedField, obj *model.Collections) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Collections_title(ctx, field)
+func (ec *executionContext) _Collection_title(ctx context.Context, field graphql.CollectedField, obj *model.Collection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Collection_title(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -730,9 +748,9 @@ func (ec *executionContext) _Collections_title(ctx context.Context, field graphq
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Collections_title(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Collection_title(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Collections",
+		Object:     "Collection",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -743,8 +761,8 @@ func (ec *executionContext) fieldContext_Collections_title(_ context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Collections_imageUrl(ctx context.Context, field graphql.CollectedField, obj *model.Collections) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Collections_imageUrl(ctx, field)
+func (ec *executionContext) _Collection_imageUrl(ctx context.Context, field graphql.CollectedField, obj *model.Collection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Collection_imageUrl(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -764,19 +782,16 @@ func (ec *executionContext) _Collections_imageUrl(ctx context.Context, field gra
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.([]string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Collections_imageUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Collection_imageUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Collections",
+		Object:     "Collection",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -787,8 +802,8 @@ func (ec *executionContext) fieldContext_Collections_imageUrl(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Collections_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Collections) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Collections_createdAt(ctx, field)
+func (ec *executionContext) _Collection_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Collection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Collection_createdAt(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -818,9 +833,9 @@ func (ec *executionContext) _Collections_createdAt(ctx context.Context, field gr
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Collections_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Collection_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Collections",
+		Object:     "Collection",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -1065,7 +1080,7 @@ func (ec *executionContext) _Mutation_createCollection(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateCollection(rctx, fc.Args["name"].(string), fc.Args["file"].(*graphql.Upload))
+		return ec.resolvers.Mutation().CreateCollection(rctx, fc.Args["name"].(string), fc.Args["file"].([]*graphql.Upload))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1126,7 +1141,7 @@ func (ec *executionContext) _Mutation_updateCollection(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateCollection(rctx, fc.Args["id"].(string), fc.Args["name"].(string))
+		return ec.resolvers.Mutation().UpdateCollection(rctx, fc.Args["id"].(string), fc.Args["name"].(string), fc.Args["file"].([]*graphql.Upload))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1495,7 +1510,7 @@ func (ec *executionContext) _Query_getCollection(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetCollection(rctx, fc.Args["byId"].(*string))
+		return ec.resolvers.Query().GetCollection(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1507,12 +1522,12 @@ func (ec *executionContext) _Query_getCollection(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Collections)
+	res := resTmp.([]*model.Collection)
 	fc.Result = res
-	return ec.marshalNCollections2ᚕᚖedu_v2ᚋgraphᚋmodelᚐCollectionsᚄ(ctx, field.Selections, res)
+	return ec.marshalNCollection2ᚕᚖedu_v2ᚋgraphᚋmodelᚐCollectionᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_getCollection(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_getCollection(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -1521,15 +1536,69 @@ func (ec *executionContext) fieldContext_Query_getCollection(ctx context.Context
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Collections_id(ctx, field)
+				return ec.fieldContext_Collection_id(ctx, field)
 			case "title":
-				return ec.fieldContext_Collections_title(ctx, field)
+				return ec.fieldContext_Collection_title(ctx, field)
 			case "imageUrl":
-				return ec.fieldContext_Collections_imageUrl(ctx, field)
+				return ec.fieldContext_Collection_imageUrl(ctx, field)
 			case "createdAt":
-				return ec.fieldContext_Collections_createdAt(ctx, field)
+				return ec.fieldContext_Collection_createdAt(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Collections", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Collection", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getCollectionById(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getCollectionById(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetCollectionByID(rctx, fc.Args["collectionId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Collection)
+	fc.Result = res
+	return ec.marshalNCollection2ᚖedu_v2ᚋgraphᚋmodelᚐCollection(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getCollectionById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Collection_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Collection_title(ctx, field)
+			case "imageUrl":
+				return ec.fieldContext_Collection_imageUrl(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Collection_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Collection", field.Name)
 		},
 	}
 	defer func() {
@@ -1539,7 +1608,7 @@ func (ec *executionContext) fieldContext_Query_getCollection(ctx context.Context
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_getCollection_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_getCollectionById_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -3544,34 +3613,31 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(_ context.Context
 
 // region    **************************** object.gotpl ****************************
 
-var collectionsImplementors = []string{"Collections"}
+var collectionImplementors = []string{"Collection"}
 
-func (ec *executionContext) _Collections(ctx context.Context, sel ast.SelectionSet, obj *model.Collections) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, collectionsImplementors)
+func (ec *executionContext) _Collection(ctx context.Context, sel ast.SelectionSet, obj *model.Collection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, collectionImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("Collections")
+			out.Values[i] = graphql.MarshalString("Collection")
 		case "id":
-			out.Values[i] = ec._Collections_id(ctx, field, obj)
+			out.Values[i] = ec._Collection_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "title":
-			out.Values[i] = ec._Collections_title(ctx, field, obj)
+			out.Values[i] = ec._Collection_title(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "imageUrl":
-			out.Values[i] = ec._Collections_imageUrl(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
+			out.Values[i] = ec._Collection_imageUrl(ctx, field, obj)
 		case "createdAt":
-			out.Values[i] = ec._Collections_createdAt(ctx, field, obj)
+			out.Values[i] = ec._Collection_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -3789,6 +3855,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getCollection(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getCollectionById":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getCollectionById(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -4217,7 +4305,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNCollections2ᚕᚖedu_v2ᚋgraphᚋmodelᚐCollectionsᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Collections) graphql.Marshaler {
+func (ec *executionContext) marshalNCollection2edu_v2ᚋgraphᚋmodelᚐCollection(ctx context.Context, sel ast.SelectionSet, v model.Collection) graphql.Marshaler {
+	return ec._Collection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCollection2ᚕᚖedu_v2ᚋgraphᚋmodelᚐCollectionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Collection) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4241,7 +4333,7 @@ func (ec *executionContext) marshalNCollections2ᚕᚖedu_v2ᚋgraphᚋmodelᚐC
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNCollections2ᚖedu_v2ᚋgraphᚋmodelᚐCollections(ctx, sel, v[i])
+			ret[i] = ec.marshalNCollection2ᚖedu_v2ᚋgraphᚋmodelᚐCollection(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4261,14 +4353,14 @@ func (ec *executionContext) marshalNCollections2ᚕᚖedu_v2ᚋgraphᚋmodelᚐC
 	return ret
 }
 
-func (ec *executionContext) marshalNCollections2ᚖedu_v2ᚋgraphᚋmodelᚐCollections(ctx context.Context, sel ast.SelectionSet, v *model.Collections) graphql.Marshaler {
+func (ec *executionContext) marshalNCollection2ᚖedu_v2ᚋgraphᚋmodelᚐCollection(ctx context.Context, sel ast.SelectionSet, v *model.Collection) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._Collections(ctx, sel, v)
+	return ec._Collection(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNGroup2ᚖedu_v2ᚋgraphᚋmodelᚐGroup(ctx context.Context, sel ast.SelectionSet, v *model.Group) graphql.Marshaler {
@@ -4342,6 +4434,59 @@ func (ec *executionContext) unmarshalNString2string(ctx context.Context, v inter
 
 func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalString(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNUpload2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUploadᚄ(ctx context.Context, v interface{}) ([]*graphql.Upload, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*graphql.Upload, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNUpload2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUploadᚄ(ctx context.Context, sel ast.SelectionSet, v []*graphql.Upload) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalNUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v interface{}) (*graphql.Upload, error) {
+	res, err := graphql.UnmarshalUpload(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, sel ast.SelectionSet, v *graphql.Upload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	res := graphql.MarshalUpload(*v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -4692,6 +4837,44 @@ func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
 	if v == nil {
 		return nil, nil
@@ -4706,6 +4889,38 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	}
 	res := graphql.MarshalString(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOUpload2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v interface{}) ([]*graphql.Upload, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*graphql.Upload, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOUpload2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, sel ast.SelectionSet, v []*graphql.Upload) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, sel, v[i])
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v interface{}) (*graphql.Upload, error) {

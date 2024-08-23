@@ -1,6 +1,13 @@
 package utils
 
-import "edu_v2/graph/model"
+import (
+	"edu_v2/graph/model"
+	"fmt"
+	"github.com/99designs/gqlgen/graphql"
+	"io"
+	"os"
+	"path/filepath"
+)
 
 func AbsResponseChecking(err error, msg string) (*model.Response, error) {
 	if err != nil {
@@ -18,4 +25,40 @@ func AbsResponseChecking(err error, msg string) (*model.Response, error) {
 type Response struct {
 	UserID int `json:"user_id"`
 	Code   int `json:"code"`
+}
+
+func UploadQuestionImages(files []*graphql.Upload, name string) (model.Collection, error) {
+	var collection model.Collection
+	collection.Title = name
+
+	err := os.MkdirAll("question_images", os.ModePerm)
+	if err != nil {
+		return collection, fmt.Errorf("failed to create question_images directory: %w", err)
+	}
+
+	if files == nil {
+		collection.ImageURL = nil
+		return collection, nil
+	}
+
+	for _, file := range files {
+		dstPath := filepath.Join("question_images", file.Filename)
+		dst, err := os.Create(dstPath)
+		if err != nil {
+			return collection, fmt.Errorf("failed to create file: %w", err)
+		}
+
+		if _, err := io.Copy(dst, file.File); err != nil {
+			dst.Close()
+			return collection, fmt.Errorf("failed to write file: %w", err)
+		}
+
+		if err := dst.Close(); err != nil {
+			return collection, fmt.Errorf("failed to close file: %w", err)
+		}
+
+		collection.ImageURL = append(collection.ImageURL, dstPath)
+	}
+
+	return collection, nil
 }

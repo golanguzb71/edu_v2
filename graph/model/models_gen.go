@@ -8,11 +8,11 @@ import (
 	"strconv"
 )
 
-type Collections struct {
-	ID        string `json:"id"`
-	Title     string `json:"title"`
-	ImageURL  string `json:"imageUrl"`
-	CreatedAt string `json:"createdAt"`
+type Collection struct {
+	ID        string   `json:"id"`
+	Title     string   `json:"title"`
+	ImageURL  []string `json:"imageUrl,omitempty"`
+	CreatedAt string   `json:"createdAt"`
 }
 
 type Group struct {

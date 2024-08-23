@@ -8,34 +8,39 @@ import (
 	"context"
 	"edu_v2/graph/model"
 	utils "edu_v2/internal"
-	"fmt"
 	"strconv"
 
 	"github.com/99designs/gqlgen/graphql"
 )
 
 // CreateCollection is the resolver for the createCollection field.
-func (r *mutationResolver) CreateCollection(ctx context.Context, name string, file *graphql.Upload) (*model.Response, error) {
-	panic(fmt.Errorf("not implemented: CreateCollection - createCollection"))
+func (r *mutationResolver) CreateCollection(ctx context.Context, name string, file []*graphql.Upload) (*model.Response, error) {
+	collection, err := utils.UploadQuestionImages(file, name)
+	if err != nil {
+		return nil, err
+	}
+	err = r.CollService.CreateCollection(&collection)
+	return utils.AbsResponseChecking(err, "collection created")
 }
 
 // UpdateCollection is the resolver for the updateCollection field.
-func (r *mutationResolver) UpdateCollection(ctx context.Context, id string, name string) (*model.Response, error) {
-	panic(fmt.Errorf("not implemented: UpdateCollection - updateCollection"))
+func (r *mutationResolver) UpdateCollection(ctx context.Context, id string, name string, file []*graphql.Upload) (*model.Response, error) {
+	return nil, nil
 }
 
 // DeleteCollection is the resolver for the deleteCollection field.
 func (r *mutationResolver) DeleteCollection(ctx context.Context, id string) (*model.Response, error) {
-	panic(fmt.Errorf("not implemented: DeleteCollection - deleteCollection"))
+	err := r.CollService.DeleteCollection(id)
+	return utils.AbsResponseChecking(err, "Deleted")
 }
 
 // CreateGroup is the resolver for the createGroup field.
 func (r *mutationResolver) CreateGroup(ctx context.Context, name string, teacherName string, level model.GroupLevel) (*model.Response, error) {
-	var model model.Group
-	model.Name = name
-	model.TeacherName = teacherName
-	model.Level = level
-	err := r.GroupService.CreateGroup(&model)
+	var group model.Group
+	group.Name = name
+	group.TeacherName = teacherName
+	group.Level = level
+	err := r.GroupService.CreateGroup(&group)
 	return utils.AbsResponseChecking(err, "Group added")
 }
 
@@ -70,8 +75,21 @@ func (r *queryResolver) GetGroups(ctx context.Context, byID *string, orderByLeve
 }
 
 // GetCollection is the resolver for the getCollection field.
-func (r *queryResolver) GetCollection(ctx context.Context, byID *string) ([]*model.Collections, error) {
-	return nil, nil
+func (r *queryResolver) GetCollection(ctx context.Context) ([]*model.Collection, error) {
+	collections, err := r.CollService.GetCollections()
+	if err != nil {
+		return nil, err
+	}
+	return collections, nil
+}
+
+// GetCollectionByID is the resolver for the getCollectionById field.
+func (r *queryResolver) GetCollectionByID(ctx context.Context, collectionID string) (*model.Collection, error) {
+	collection, err := r.CollService.GetCollection(collectionID)
+	if err != nil {
+		return nil, err
+	}
+	return collection, err
 }
 
 // Mutation returns MutationResolver implementation.
