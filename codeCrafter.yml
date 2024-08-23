@@ -1,0 +1,13 @@
+event:
+  creating_package_files:
+    state: off
+    flow:
+      - cmd/[main.go]
+      - internal/config/[config.go,config_test.go]
+      - internal/repository
+      - internal/service
+      - internal/[utils.go]
+      - migrations/[up.sql,down.sql,mock_information.sql]
+  linking_class:
+    - internal/repository| _repository.go
+    - internal/service| _service.go
