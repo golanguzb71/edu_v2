@@ -2,25 +2,85 @@
 
 package model
 
-type Mutation struct {
+import (
+	"fmt"
+	"io"
+	"strconv"
+)
+
+type Collections struct {
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	ImageURL  string `json:"imageUrl"`
+	CreatedAt string `json:"createdAt"`
 }
 
-type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
+type Group struct {
+	ID          string     `json:"id"`
+	Name        string     `json:"name"`
+	TeacherName string     `json:"teacherName"`
+	Level       GroupLevel `json:"level"`
+	CreatedAt   string     `json:"createdAt"`
+}
+
+type Mutation struct {
 }
 
 type Query struct {
 }
 
-type Todo struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
-	User *User  `json:"user"`
+type Response struct {
+	StatusCode int    `json:"statusCode"`
+	Message    string `json:"message"`
 }
 
-type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+type GroupLevel string
+
+const (
+	GroupLevelBeginner          GroupLevel = "BEGINNER"
+	GroupLevelElementary        GroupLevel = "ELEMENTARY"
+	GroupLevelPreIntermediate   GroupLevel = "PRE_INTERMEDIATE"
+	GroupLevelIntermediate      GroupLevel = "INTERMEDIATE"
+	GroupLevelUpperIntermediate GroupLevel = "UPPER_INTERMEDIATE"
+	GroupLevelAdvanced          GroupLevel = "ADVANCED"
+	GroupLevelProficient        GroupLevel = "PROFICIENT"
+)
+
+var AllGroupLevel = []GroupLevel{
+	GroupLevelBeginner,
+	GroupLevelElementary,
+	GroupLevelPreIntermediate,
+	GroupLevelIntermediate,
+	GroupLevelUpperIntermediate,
+	GroupLevelAdvanced,
+	GroupLevelProficient,
+}
+
+func (e GroupLevel) IsValid() bool {
+	switch e {
+	case GroupLevelBeginner, GroupLevelElementary, GroupLevelPreIntermediate, GroupLevelIntermediate, GroupLevelUpperIntermediate, GroupLevelAdvanced, GroupLevelProficient:
+		return true
+	}
+	return false
+}
+
+func (e GroupLevel) String() string {
+	return string(e)
+}
+
+func (e *GroupLevel) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = GroupLevel(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid GroupLevel", str)
+	}
+	return nil
+}
+
+func (e GroupLevel) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

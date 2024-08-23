@@ -7,17 +7,71 @@ package graph
 import (
 	"context"
 	"edu_v2/graph/model"
+	utils "edu_v2/internal"
 	"fmt"
+	"strconv"
+
+	"github.com/99designs/gqlgen/graphql"
 )
 
-// CreateTodo is the resolver for the createTodo field.
-func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: CreateTodo - createTodo"))
+// CreateCollection is the resolver for the createCollection field.
+func (r *mutationResolver) CreateCollection(ctx context.Context, name string, file *graphql.Upload) (*model.Response, error) {
+	panic(fmt.Errorf("not implemented: CreateCollection - createCollection"))
 }
 
-// Todos is the resolver for the todos field.
-func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: Todos - todos"))
+// UpdateCollection is the resolver for the updateCollection field.
+func (r *mutationResolver) UpdateCollection(ctx context.Context, id string, name string) (*model.Response, error) {
+	panic(fmt.Errorf("not implemented: UpdateCollection - updateCollection"))
+}
+
+// DeleteCollection is the resolver for the deleteCollection field.
+func (r *mutationResolver) DeleteCollection(ctx context.Context, id string) (*model.Response, error) {
+	panic(fmt.Errorf("not implemented: DeleteCollection - deleteCollection"))
+}
+
+// CreateGroup is the resolver for the createGroup field.
+func (r *mutationResolver) CreateGroup(ctx context.Context, name string, teacherName string, level model.GroupLevel) (*model.Response, error) {
+	var model model.Group
+	model.Name = name
+	model.TeacherName = teacherName
+	model.Level = level
+	err := r.GroupService.CreateGroup(&model)
+	return utils.AbsResponseChecking(err, "Group added")
+}
+
+// UpdateGroup is the resolver for the updateGroup field.
+func (r *mutationResolver) UpdateGroup(ctx context.Context, id string, name string, teacherName string, level model.GroupLevel) (*model.Response, error) {
+	var group model.Group
+	group.ID = id
+	group.Name = name
+	group.TeacherName = teacherName
+	group.Level = level
+	err := r.GroupService.UpdateGroup(&group)
+	return utils.AbsResponseChecking(err, "updated")
+}
+
+// DeleteGroup is the resolver for the deleteGroup field.
+func (r *mutationResolver) DeleteGroup(ctx context.Context, id string) (*model.Response, error) {
+	realId, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, err
+	}
+	err = r.GroupService.DeleteGroup(realId)
+	return utils.AbsResponseChecking(err, "deleted")
+}
+
+// GetGroups is the resolver for the getGroups field.
+func (r *queryResolver) GetGroups(ctx context.Context, byID *string, orderByLevel *bool) ([]*model.Group, error) {
+	group, err := r.GroupService.GetGroup(byID, orderByLevel)
+	if err != nil {
+		return nil, err
+	}
+	return group, nil
+}
+
+// GetCollection is the resolver for the getCollection field.
+func (r *queryResolver) GetCollection(ctx context.Context, byID *string) ([]*model.Collections, error) {
+	return nil, nil
 }
 
 // Mutation returns MutationResolver implementation.

@@ -1,28 +1,46 @@
-# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
+scalar Upload
 
-type Todo {
-  id: ID!
-  text: String!
-  done: Boolean!
-  user: User!
+type Group {
+    id: ID!
+    name: String!
+    teacherName: String!
+    level: GroupLevel!
+    createdAt: String!
 }
 
-type User {
-  id: ID!
-  name: String!
+enum GroupLevel {
+    BEGINNER
+    ELEMENTARY
+    PRE_INTERMEDIATE
+    INTERMEDIATE
+    UPPER_INTERMEDIATE
+    ADVANCED
+    PROFICIENT
+}
+
+type Response {
+    statusCode: Int!
+    message: String!
+}
+
+type Collections {
+    id :ID!
+    title :String!
+    imageUrl:String!
+    createdAt:String!
 }
 
 type Query {
-  todos: [Todo!]!
+    getGroups(byId: ID, orderByLevel: Boolean): [Group!]
+    getCollection(byId:ID):[Collections!]!
 }
 
-input NewTodo {
-  text: String!
-  userId: String!
-}
 
 type Mutation {
-  createTodo(input: NewTodo!): Todo!
+    createCollection(name: String!, file: Upload): Response!
+    updateCollection(id: ID!, name: String!): Response!
+    deleteCollection(id: ID!): Response!
+    createGroup(name: String!, teacherName: String!, level: GroupLevel!): Response!
+    updateGroup(id: ID!, name: String!, teacherName: String!, level: GroupLevel!): Response!
+    deleteGroup(id: ID!): Response!
 }
