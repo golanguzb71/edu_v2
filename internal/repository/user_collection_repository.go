@@ -60,7 +60,6 @@ func (r *UserCollectionRepository) GetStudentTestExams(code *string, studentId *
 	}
 	return studentTestExamsForStudent(rows, r)
 }
-
 func studentTestExamsForStudent(rows *sql.Rows, r *UserCollectionRepository) ([]*model.UserCollectionTestExams, error) {
 	var UCTL []*model.UserCollectionTestExams
 	for rows.Next() {
@@ -80,20 +79,19 @@ func studentTestExamsForStudent(rows *sql.Rows, r *UserCollectionRepository) ([]
 
 		trueCount := 0
 		falseCount := 0
-		lenTrueAns := len(trueAnswers)
-		lenStudentAns := len(studentAnswers)
-		if lenStudentAns < lenTrueAns {
-			falseCount = lenTrueAns - lenStudentAns
-		}
-
-		for i := range studentAnswers {
+		for i := range trueAnswers {
 			var isTrue bool
 			normalizedTrueAnswer := strings.ToLower(strings.TrimSpace(trueAnswers[i]))
-			normalizedStudentAnswer := strings.ToLower(strings.TrimSpace(studentAnswers[i]))
 
-			if i < len(studentAnswers) && normalizedTrueAnswer == normalizedStudentAnswer {
-				isTrue = true
-				trueCount++
+			if i < len(studentAnswers) {
+				normalizedStudentAnswer := strings.ToLower(strings.TrimSpace(studentAnswers[i]))
+				if normalizedTrueAnswer == normalizedStudentAnswer {
+					isTrue = true
+					trueCount++
+				} else {
+					isTrue = false
+					falseCount++
+				}
 			} else {
 				isTrue = false
 				falseCount++
@@ -104,6 +102,15 @@ func studentTestExamsForStudent(rows *sql.Rows, r *UserCollectionRepository) ([]
 				TrueAnswer:    trueAnswers[i],
 				IsTrue:        &isTrue,
 			})
+		}
+		var helper *bool
+		for i := len(studentAnswers); i < len(trueAnswers); i++ {
+			UCT.AnswerField = append(UCT.AnswerField, &model.AnswerField{
+				StudentAnswer: nil,
+				TrueAnswer:    trueAnswers[i],
+				IsTrue:        helper,
+			})
+			falseCount++
 		}
 
 		UCT.TrueCount = &trueCount
@@ -141,7 +148,7 @@ func determineLevel(trueCount int) string {
 		return "UPPER_INTERMEDIATE"
 	case trueCount > 50 && trueCount <= 60:
 		return "ADVANCED"
-	case trueCount > 60 && trueCount <= 70:
+	case trueCount > 60:
 		return "PROFICIENT"
 	default:
 		return ""
