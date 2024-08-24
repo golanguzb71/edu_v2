@@ -4,6 +4,7 @@ import (
 	"edu_v2/graph/model"
 	"fmt"
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/google/uuid"
 	"io"
 	"os"
 	"path/filepath"
@@ -42,7 +43,9 @@ func UploadQuestionImages(files []*graphql.Upload, name string) (model.Collectio
 	}
 
 	for _, file := range files {
-		dstPath := filepath.Join("question_images", file.Filename)
+		newFileName := uuid.New().String() + filepath.Ext(file.Filename)
+		dstPath := filepath.Join("question_images", newFileName)
+
 		dst, err := os.Create(dstPath)
 		if err != nil {
 			return collection, fmt.Errorf("failed to create file: %w", err)
@@ -57,7 +60,7 @@ func UploadQuestionImages(files []*graphql.Upload, name string) (model.Collectio
 			return collection, fmt.Errorf("failed to close file: %w", err)
 		}
 
-		collection.ImageURL = append(collection.ImageURL, dstPath)
+		collection.ImageURL = append(collection.ImageURL, newFileName)
 	}
 
 	return collection, nil

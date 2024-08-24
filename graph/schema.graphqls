@@ -5,7 +5,16 @@ type Group {
     name: String!
     teacherName: String!
     level: GroupLevel!
+    start_at:String!
+    started_date:String!
+    days_week:DaysWeek!
     createdAt: String!
+}
+
+enum DaysWeek{
+    EVEN_DAYS,
+    ODD_DAYS,
+    CUSTOM
 }
 
 enum GroupLevel {
@@ -30,10 +39,27 @@ type Collection {
     createdAt:String!
 }
 
+type AnswerField{
+    studentAnswer:String
+    trueAnswer:String!
+    isTrue:Boolean
+}
+
+type UserCollectionTestExams {
+    id :ID!
+    answerField:[AnswerField]!
+    requestGroup:[Group]
+    trueCount:Int
+    falseCount:Int
+    createdAt:String!
+}
+
+
 type Query {
     getGroups(byId: ID, orderByLevel: Boolean): [Group!]
     getCollection:[Collection!]!
     getCollectionById(collectionId:ID!):Collection!
+    getStudentTestExams(code:String, studentId:ID , page:Int , size:Int):[UserCollectionTestExams!]!
 }
 
 
@@ -41,7 +67,10 @@ type Mutation {
     createCollection(name: String!, file: [Upload!]!): Response!
     updateCollection(id: ID!, name: String! , file: [Upload]): Response!
     deleteCollection(id: ID!): Response!
-    createGroup(name: String!, teacherName: String!, level: GroupLevel!): Response!
-    updateGroup(id: ID!, name: String!, teacherName: String!, level: GroupLevel!): Response!
+    createGroup(name: String!, teacherName: String!, level: GroupLevel!, startAt:String!,startDate:String!,daysWeek:DaysWeek!): Response!
+    updateGroup(id: ID!, name: String!, teacherName: String!, level: GroupLevel! , startAt:String!,startDate:String!,daysWeek:DaysWeek!): Response!
     deleteGroup(id: ID!): Response!
+    createAnswer(collectionId:ID! , answers:[String]! , isUpdated:Boolean):Response!
+    deleteAnswer(collectionId:ID!):Response!
+    createStudentAnswer(collectionId:ID! , answers:[String]!):Response!
 }
