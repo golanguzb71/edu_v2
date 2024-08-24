@@ -75,7 +75,7 @@ type ComplexityRoot struct {
 		CreateAnswer        func(childComplexity int, collectionID string, answers []*string, isUpdated *bool) int
 		CreateCollection    func(childComplexity int, name string, file []*graphql.Upload) int
 		CreateGroup         func(childComplexity int, name string, teacherName string, level model.GroupLevel, startAt string, startDate string, daysWeek model.DaysWeek) int
-		CreateStudentAnswer func(childComplexity int, collectionID string, answers []*string) int
+		CreateStudentAnswer func(childComplexity int, collectionID string, answers []*string, code string) int
 		DeleteAnswer        func(childComplexity int, collectionID string) int
 		DeleteCollection    func(childComplexity int, id string) int
 		DeleteGroup         func(childComplexity int, id string) int
@@ -114,7 +114,7 @@ type MutationResolver interface {
 	DeleteGroup(ctx context.Context, id string) (*model.Response, error)
 	CreateAnswer(ctx context.Context, collectionID string, answers []*string, isUpdated *bool) (*model.Response, error)
 	DeleteAnswer(ctx context.Context, collectionID string) (*model.Response, error)
-	CreateStudentAnswer(ctx context.Context, collectionID string, answers []*string) (*model.Response, error)
+	CreateStudentAnswer(ctx context.Context, collectionID string, answers []*string, code string) (*model.Response, error)
 }
 type QueryResolver interface {
 	GetGroups(ctx context.Context, byID *string, orderByLevel *bool) ([]*model.Group, error)
@@ -293,7 +293,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateStudentAnswer(childComplexity, args["collectionId"].(string), args["answers"].([]*string)), true
+		return e.complexity.Mutation.CreateStudentAnswer(childComplexity, args["collectionId"].(string), args["answers"].([]*string), args["code"].(string)), true
 
 	case "Mutation.deleteAnswer":
 		if e.complexity.Mutation.DeleteAnswer == nil {
@@ -715,6 +715,15 @@ func (ec *executionContext) field_Mutation_createStudentAnswer_args(ctx context.
 		}
 	}
 	args["answers"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["code"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["code"] = arg2
 	return args, nil
 }
 
@@ -2152,7 +2161,7 @@ func (ec *executionContext) _Mutation_createStudentAnswer(ctx context.Context, f
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateStudentAnswer(rctx, fc.Args["collectionId"].(string), fc.Args["answers"].([]*string))
+		return ec.resolvers.Mutation().CreateStudentAnswer(rctx, fc.Args["collectionId"].(string), fc.Args["answers"].([]*string), fc.Args["code"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

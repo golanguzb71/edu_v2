@@ -19,3 +19,7 @@ func (s *AnswerService) CreateAnswer(answers []*string, isUpdated *bool, collect
 func (s *AnswerService) DeleteAnswer(collectionId *string) error {
 	return s.repo.DeleteAnswer(collectionId)
 }
+
+func (s *AnswerService) CreateStudentAnswer(collectionId string, answers []*string, code string) error {
+	return s.repo.CreateStudentAnswer(collectionId, answers, code)
+}

@@ -32,7 +32,7 @@ func main() {
 	rdb := database.RDB
 	groupRepo := repository.NewGroupRepository(db)
 	collRepo := repository.NewCollectionRepository(db)
-	answerRepo := repository.NewAnswerRepository(db)
+	answerRepo := repository.NewAnswerRepository(db, rdb)
 	userCollRepo := repository.NewUserCollectionRepository(db, rdb)
 
 	answerService := service.NewAnswerService(answerRepo)

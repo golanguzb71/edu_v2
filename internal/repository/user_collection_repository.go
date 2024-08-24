@@ -80,8 +80,13 @@ func studentTestExamsForStudent(rows *sql.Rows, r *UserCollectionRepository) ([]
 
 		trueCount := 0
 		falseCount := 0
+		lenTrueAns := len(trueAnswers)
+		lenStudentAns := len(studentAnswers)
+		if lenStudentAns < lenTrueAns {
+			falseCount = lenTrueAns - lenStudentAns
+		}
 
-		for i := range trueAnswers {
+		for i := range studentAnswers {
 			var isTrue bool
 			normalizedTrueAnswer := strings.ToLower(strings.TrimSpace(trueAnswers[i]))
 			normalizedStudentAnswer := strings.ToLower(strings.TrimSpace(studentAnswers[i]))
@@ -100,6 +105,7 @@ func studentTestExamsForStudent(rows *sql.Rows, r *UserCollectionRepository) ([]
 				IsTrue:        &isTrue,
 			})
 		}
+
 		UCT.TrueCount = &trueCount
 		UCT.FalseCount = &falseCount
 

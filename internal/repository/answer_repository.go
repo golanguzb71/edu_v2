@@ -5,14 +5,16 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lib/pq"
+	"github.com/redis/go-redis/v9"
 )
 
 type AnswerRepository struct {
-	db *sql.DB
+	db  *sql.DB
+	rdb *redis.Client
 }
 
-func NewAnswerRepository(db *sql.DB) *AnswerRepository {
-	return &AnswerRepository{db: db}
+func NewAnswerRepository(db *sql.DB, rdb *redis.Client) *AnswerRepository {
+	return &AnswerRepository{db: db, rdb: rdb}
 }
 
 func (r *AnswerRepository) CreateAnswer(collectionId *string, answers []*string, isUpdated *bool) error {
@@ -46,5 +48,13 @@ func (r *AnswerRepository) DeleteAnswer(collectionId *string) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (r *AnswerRepository) CreateStudentAnswer(collectionId string, answers []*string, code string) error {
+	//chat_id, err := r.rdb.Get(context.Background(), code).Result()
+	//if err != nil {
+	//	return errors.New("error while getting user information please update your code => https://t.me/codevanbot")
+	//}
 	return nil
 }

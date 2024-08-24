@@ -72,5 +72,5 @@ type Mutation {
     deleteGroup(id: ID!): Response!
     createAnswer(collectionId:ID! , answers:[String]! , isUpdated:Boolean):Response!
     deleteAnswer(collectionId:ID!):Response!
-    createStudentAnswer(collectionId:ID! , answers:[String]!):Response!
+    createStudentAnswer(collectionId:ID! , answers:[String]! , code:String!):Response!
 }

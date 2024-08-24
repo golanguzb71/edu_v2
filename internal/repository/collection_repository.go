@@ -15,7 +15,6 @@ func NewCollectionRepository(db *sql.DB) *CollectionRepository {
 	return &CollectionRepository{db: db}
 }
 
-// Create inserts a new collection into the database.
 func (r *CollectionRepository) Create(collection *model.Collection) error {
 	_, err := r.db.Exec("INSERT INTO collections (title, questions_url) VALUES ($1 , $2)", collection.Title, pq.Array(collection.ImageURL))
 	if err != nil {

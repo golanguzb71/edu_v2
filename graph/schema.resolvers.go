@@ -8,7 +8,6 @@ import (
 	"context"
 	"edu_v2/graph/model"
 	utils "edu_v2/internal"
-	"fmt"
 	"strconv"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -80,8 +79,8 @@ func (r *mutationResolver) DeleteAnswer(ctx context.Context, collectionID string
 }
 
 // CreateStudentAnswer is the resolver for the createStudentAnswer field.
-func (r *mutationResolver) CreateStudentAnswer(ctx context.Context, collectionID string, answers []*string) (*model.Response, error) {
-	panic(fmt.Errorf("not implemented: CreateStudentAnswer - createStudentAnswer"))
+func (r *mutationResolver) CreateStudentAnswer(ctx context.Context, collectionID string, answers []*string, code string) (*model.Response, error) {
+	return utils.AbsResponseChecking(r.AnswerService.CreateStudentAnswer(collectionID, answers, code), "Answer Saved. You can see your result on second Menu")
 }
 
 // GetGroups is the resolver for the getGroups field.
