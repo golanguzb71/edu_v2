@@ -19,7 +19,7 @@ jobs:
           SERVER_IP: ${{ secrets.SERVER_IP }}
         run: |
           sshpass -p "$SERVER_PASSWORD" ssh -o StrictHostKeyChecking=no root@$SERVER_IP "
-          cd Services/ &&
+          cd /root/Services &&
           git pull &&
           docker-compose build &&
           docker-compose up -d
