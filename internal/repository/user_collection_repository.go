@@ -34,7 +34,7 @@ func (r *UserCollectionRepository) GetStudentTestExams(code *string, studentId *
 		if code != nil && *code != "KEY_ADM" {
 			return nil, errors.New("forbidden: you don't have access to see this")
 		}
-		rows, err := r.db.Query(`SELECT answer_field, collection_id FROM user_collection WHERE user_id=$1 LIMIT $2 OFFSET $3`, studentId, size, offset)
+		rows, err := r.db.Query(`SELECT answer_field, collection_id, created_at FROM user_collection WHERE user_id=$1 LIMIT $2 OFFSET $3`, studentId, size, offset)
 		if err != nil {
 			return nil, err
 		}
@@ -43,7 +43,7 @@ func (r *UserCollectionRepository) GetStudentTestExams(code *string, studentId *
 
 	chatId, err := r.rdb.Get(context.Background(), *code).Result()
 	if err != nil {
-		return nil, err
+		return nil, errors.New("error while getting student information; please update key by Telegram bot => https://t.me/codevanbot")
 	}
 	if chatId == "" {
 		return nil, errors.New("error while getting student information; please update key by Telegram bot => https://t.me/codevanbot")
@@ -67,7 +67,7 @@ func studentTestExamsForStudent(rows *sql.Rows, r *UserCollectionRepository) ([]
 		var UCT model.UserCollectionTestExams
 		var studentAnswers []string
 
-		err := rows.Scan(pq.Array(&studentAnswers), &UCT.CollectionID)
+		err := rows.Scan(pq.Array(&studentAnswers), &UCT.CollectionID, &UCT.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
