@@ -8,6 +8,12 @@ import (
 	"strconv"
 )
 
+type AnswerField struct {
+	StudentAnswer *string `json:"studentAnswer,omitempty"`
+	TrueAnswer    string  `json:"trueAnswer"`
+	IsTrue        *bool   `json:"isTrue,omitempty"`
+}
+
 type Collection struct {
 	ID        string   `json:"id"`
 	Title     string   `json:"title"`
@@ -20,6 +26,9 @@ type Group struct {
 	Name        string     `json:"name"`
 	TeacherName string     `json:"teacherName"`
 	Level       GroupLevel `json:"level"`
+	StartAt     string     `json:"start_at"`
+	StartedDate string     `json:"started_date"`
+	DaysWeek    DaysWeek   `json:"days_week"`
 	CreatedAt   string     `json:"createdAt"`
 }
 
@@ -32,6 +41,58 @@ type Query struct {
 type Response struct {
 	StatusCode int    `json:"statusCode"`
 	Message    string `json:"message"`
+}
+
+type UserCollectionTestExams struct {
+	ID           string         `json:"id"`
+	AnswerField  []*AnswerField `json:"answerField"`
+	RequestGroup []*Group       `json:"requestGroup,omitempty"`
+	TrueCount    *int           `json:"trueCount,omitempty"`
+	FalseCount   *int           `json:"falseCount,omitempty"`
+	CreatedAt    string         `json:"createdAt"`
+}
+
+type DaysWeek string
+
+const (
+	DaysWeekEvenDays DaysWeek = "EVEN_DAYS"
+	DaysWeekOddDays  DaysWeek = "ODD_DAYS"
+	DaysWeekCustom   DaysWeek = "CUSTOM"
+)
+
+var AllDaysWeek = []DaysWeek{
+	DaysWeekEvenDays,
+	DaysWeekOddDays,
+	DaysWeekCustom,
+}
+
+func (e DaysWeek) IsValid() bool {
+	switch e {
+	case DaysWeekEvenDays, DaysWeekOddDays, DaysWeekCustom:
+		return true
+	}
+	return false
+}
+
+func (e DaysWeek) String() string {
+	return string(e)
+}
+
+func (e *DaysWeek) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = DaysWeek(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid DaysWeek", str)
+	}
+	return nil
+}
+
+func (e DaysWeek) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 type GroupLevel string
