@@ -80,45 +80,56 @@ func studentTestExamsForStudent(rows *sql.Rows, r *UserCollectionRepository) ([]
 
 		trueCount := 0
 		falseCount := 0
-		UCT.AnswerField = []*model.AnswerField{}
+		var answerFields []*model.AnswerField
 
-		for i := 0; i < len(trueAnswers); i++ {
+		maxLength := len(trueAnswers)
+		if len(studentAnswers) > maxLength {
+			maxLength = len(studentAnswers)
+		}
+
+		for i := 0; i < maxLength; i++ {
 			var isTrue bool
-			var studentAnswer *string
-			if i < len(studentAnswers) {
-				normalizedTrueAnswer := strings.ToLower(strings.TrimSpace(trueAnswers[i]))
-				normalizedStudentAnswer := strings.ToLower(strings.TrimSpace(studentAnswers[i]))
+			var studentAnswer, trueAnswer string
 
-				isTrue = normalizedTrueAnswer == normalizedStudentAnswer
-				if isTrue {
-					trueCount++
-				} else {
-					falseCount++
-				}
-				studentAnswer = &studentAnswers[i]
-			} else {
-				isTrue = false
-				falseCount++
-				var emptyAnswer string
-				studentAnswer = &emptyAnswer
+			if i < len(trueAnswers) {
+				trueAnswer = trueAnswers[i]
+			}
+			if i < len(studentAnswers) {
+				studentAnswer = studentAnswers[i]
 			}
 
-			UCT.AnswerField = append(UCT.AnswerField, &model.AnswerField{
-				StudentAnswer: studentAnswer,
-				TrueAnswer:    trueAnswers[i],
-				IsTrue:        &isTrue,
-			})
+			if i < len(trueAnswers) {
+				normalizedTrueAnswer := strings.ToLower(strings.TrimSpace(trueAnswer))
+				if i < len(studentAnswers) {
+					normalizedStudentAnswer := strings.ToLower(strings.TrimSpace(studentAnswer))
+					if normalizedTrueAnswer == normalizedStudentAnswer {
+						isTrue = true
+						trueCount++
+					} else {
+						isTrue = false
+						falseCount++
+					}
+				} else {
+					isTrue = false
+					falseCount++
+				}
+
+				answerFields = append(answerFields, &model.AnswerField{
+					StudentAnswer: &studentAnswer,
+					TrueAnswer:    trueAnswer,
+					IsTrue:        &isTrue,
+				})
+			} else {
+				answerFields = append(answerFields, &model.AnswerField{
+					StudentAnswer: nil,
+					TrueAnswer:    trueAnswer,
+					IsTrue:        new(bool),
+				})
+				falseCount++
+			}
 		}
 
-		for i := len(studentAnswers); i < len(trueAnswers); i++ {
-			UCT.AnswerField = append(UCT.AnswerField, &model.AnswerField{
-				StudentAnswer: nil,
-				TrueAnswer:    trueAnswers[i],
-				IsTrue:        new(bool),
-			})
-			falseCount++
-		}
-
+		UCT.AnswerField = answerFields
 		UCT.TrueCount = &trueCount
 		UCT.FalseCount = &falseCount
 
