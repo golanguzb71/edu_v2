@@ -6,6 +6,7 @@ import (
 	database "edu_v2/internal/config"
 	"edu_v2/internal/repository"
 	"edu_v2/internal/service"
+	"errors"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gorilla/handlers"
@@ -14,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 )
@@ -21,42 +23,58 @@ import (
 func main() {
 	loadEnv()
 	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
 	database.ConnectPostgres()
 	database.ConnectRedis()
 	db := database.DB
 
-	//repos
 	groupRepo := repository.NewGroupRepository(db)
 	collRepo := repository.NewCollectionRepository(db)
+	answerRepo := repository.NewAnswerRepository(db)
 
-	//services
+	answerService := service.NewAnswerService(answerRepo)
 	groupService := service.NewGroupService(groupRepo)
 	collService := service.NewCollectionService(collRepo)
 
-	//graphServer
-	graphQLServer := startGraphQLServer(port, groupService, collService)
+	server := startServer(port, groupService, collService, answerService)
 
-	//shut down
-	waitForShutDown(graphQLServer)
+	waitForShutdown(server)
 }
 
 func loadEnv() {
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env files")
+		log.Fatalf("Error loading .env file: %v", err)
 	}
 }
 
-func startGraphQLServer(port string, groupService *service.GroupService, collService *service.CollectionService) *http.Server {
-	gqlMux := http.NewServeMux()
+func startServer(port string, groupService *service.GroupService, collService *service.CollectionService, answerService *service.AnswerService) *http.Server {
+	mux := http.NewServeMux()
+	mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
 
-	gqlMux.Handle("/", playground.Handler("GraphQL playground", "/query"))
-
-	gqlMux.Handle("/query", handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{
+	mux.Handle("/query", handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{
 		Resolvers: &graph.Resolver{
-			GroupService: groupService,
-			CollService:  collService,
+			GroupService:  groupService,
+			CollService:   collService,
+			AnswerService: answerService,
 		},
 	})))
+
+	mux.HandleFunc("/images/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/images/" {
+			http.NotFound(w, r)
+			return
+		}
+		imagePath := filepath.Join("question_images", r.URL.Path[len("/images/"):])
+
+		if _, err := os.Stat(imagePath); os.IsNotExist(err) {
+			http.NotFound(w, r)
+			return
+		}
+
+		http.ServeFile(w, r, imagePath)
+	})
 
 	corsHandler := handlers.CORS(
 		handlers.AllowedOrigins([]string{"*"}),
@@ -64,26 +82,26 @@ func startGraphQLServer(port string, groupService *service.GroupService, collSer
 		handlers.AllowedHeaders([]string{"Origin", "Content-Type", "Authorization"}),
 	)
 
-	gqlSrv := &http.Server{
+	server := &http.Server{
 		Addr:    ":" + port,
-		Handler: corsHandler(gqlMux),
+		Handler: corsHandler(mux),
 	}
 
 	go func() {
-		if err := gqlSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Error starting GraphQL server: %v", err)
+		log.Printf("Server is starting on port %s...", port)
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("Error starting server: %v", err)
 		}
 	}()
-	log.Println("Server starting ...")
-	return gqlSrv
+	return server
 }
 
-func waitForShutDown(server *http.Server) {
+func waitForShutdown(server *http.Server) {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("Shutting down servers...")
+	log.Println("Shutting down server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -92,5 +110,5 @@ func waitForShutDown(server *http.Server) {
 		log.Fatalf("Server shutdown failed: %v", err)
 	}
 
-	log.Println("Servers exiting")
+	log.Println("Server exited")
 }
