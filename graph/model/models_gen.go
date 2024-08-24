@@ -44,7 +44,7 @@ type Response struct {
 }
 
 type UserCollectionTestExams struct {
-	ID           string         `json:"id"`
+	CollectionID string         `json:"collectionId"`
 	AnswerField  []*AnswerField `json:"answerField"`
 	RequestGroup []*Group       `json:"requestGroup,omitempty"`
 	TrueCount    *int           `json:"trueCount,omitempty"`

@@ -113,7 +113,7 @@ func (r *queryResolver) GetCollectionByID(ctx context.Context, collectionID stri
 
 // GetStudentTestExams is the resolver for the getStudentTestExams field.
 func (r *queryResolver) GetStudentTestExams(ctx context.Context, code *string, studentID *string, page *int, size *int) ([]*model.UserCollectionTestExams, error) {
-	panic(fmt.Errorf("not implemented: GetStudentTestExams - getStudentTestExams"))
+	return r.UserCollService.GetStudentTestExams(code, studentID, page, size)
 }
 
 // Mutation returns MutationResolver implementation.

@@ -46,7 +46,7 @@ type AnswerField{
 }
 
 type UserCollectionTestExams {
-    id :ID!
+    collectionId:ID!
     answerField:[AnswerField]!
     requestGroup:[Group]
     trueCount:Int

@@ -97,9 +97,9 @@ type ComplexityRoot struct {
 
 	UserCollectionTestExams struct {
 		AnswerField  func(childComplexity int) int
+		CollectionID func(childComplexity int) int
 		CreatedAt    func(childComplexity int) int
 		FalseCount   func(childComplexity int) int
-		ID           func(childComplexity int) int
 		RequestGroup func(childComplexity int) int
 		TrueCount    func(childComplexity int) int
 	}
@@ -419,6 +419,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.UserCollectionTestExams.AnswerField(childComplexity), true
 
+	case "UserCollectionTestExams.collectionId":
+		if e.complexity.UserCollectionTestExams.CollectionID == nil {
+			break
+		}
+
+		return e.complexity.UserCollectionTestExams.CollectionID(childComplexity), true
+
 	case "UserCollectionTestExams.createdAt":
 		if e.complexity.UserCollectionTestExams.CreatedAt == nil {
 			break
@@ -432,13 +439,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.UserCollectionTestExams.FalseCount(childComplexity), true
-
-	case "UserCollectionTestExams.id":
-		if e.complexity.UserCollectionTestExams.ID == nil {
-			break
-		}
-
-		return e.complexity.UserCollectionTestExams.ID(childComplexity), true
 
 	case "UserCollectionTestExams.requestGroup":
 		if e.complexity.UserCollectionTestExams.RequestGroup == nil {
@@ -2427,8 +2427,8 @@ func (ec *executionContext) fieldContext_Query_getStudentTestExams(ctx context.C
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_UserCollectionTestExams_id(ctx, field)
+			case "collectionId":
+				return ec.fieldContext_UserCollectionTestExams_collectionId(ctx, field)
 			case "answerField":
 				return ec.fieldContext_UserCollectionTestExams_answerField(ctx, field)
 			case "requestGroup":
@@ -2674,8 +2674,8 @@ func (ec *executionContext) fieldContext_Response_message(_ context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _UserCollectionTestExams_id(ctx context.Context, field graphql.CollectedField, obj *model.UserCollectionTestExams) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserCollectionTestExams_id(ctx, field)
+func (ec *executionContext) _UserCollectionTestExams_collectionId(ctx context.Context, field graphql.CollectedField, obj *model.UserCollectionTestExams) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserCollectionTestExams_collectionId(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2688,7 +2688,7 @@ func (ec *executionContext) _UserCollectionTestExams_id(ctx context.Context, fie
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return obj.CollectionID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2705,7 +2705,7 @@ func (ec *executionContext) _UserCollectionTestExams_id(ctx context.Context, fie
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserCollectionTestExams_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserCollectionTestExams_collectionId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserCollectionTestExams",
 		Field:      field,
@@ -5199,8 +5199,8 @@ func (ec *executionContext) _UserCollectionTestExams(ctx context.Context, sel as
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("UserCollectionTestExams")
-		case "id":
-			out.Values[i] = ec._UserCollectionTestExams_id(ctx, field, obj)
+		case "collectionId":
+			out.Values[i] = ec._UserCollectionTestExams_collectionId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

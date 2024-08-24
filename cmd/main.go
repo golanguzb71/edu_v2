@@ -29,16 +29,18 @@ func main() {
 	database.ConnectPostgres()
 	database.ConnectRedis()
 	db := database.DB
-
+	rdb := database.RDB
 	groupRepo := repository.NewGroupRepository(db)
 	collRepo := repository.NewCollectionRepository(db)
 	answerRepo := repository.NewAnswerRepository(db)
+	userCollRepo := repository.NewUserCollectionRepository(db, rdb)
 
 	answerService := service.NewAnswerService(answerRepo)
 	groupService := service.NewGroupService(groupRepo)
 	collService := service.NewCollectionService(collRepo)
+	userService := service.NewUserCollectionUserService(userCollRepo)
 
-	server := startServer(port, groupService, collService, answerService)
+	server := startServer(port, groupService, collService, answerService, userService)
 
 	waitForShutdown(server)
 }
@@ -49,15 +51,16 @@ func loadEnv() {
 	}
 }
 
-func startServer(port string, groupService *service.GroupService, collService *service.CollectionService, answerService *service.AnswerService) *http.Server {
+func startServer(port string, groupService *service.GroupService, collService *service.CollectionService, answerService *service.AnswerService, userCollService *service.UserCollectionService) *http.Server {
 	mux := http.NewServeMux()
 	mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
 
 	mux.Handle("/query", handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{
 		Resolvers: &graph.Resolver{
-			GroupService:  groupService,
-			CollService:   collService,
-			AnswerService: answerService,
+			GroupService:    groupService,
+			CollService:     collService,
+			AnswerService:   answerService,
+			UserCollService: userCollService,
 		},
 	})))
 
