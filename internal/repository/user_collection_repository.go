@@ -60,6 +60,7 @@ func (r *UserCollectionRepository) GetStudentTestExams(code *string, studentId *
 	}
 	return studentTestExamsForStudent(rows, r)
 }
+
 func studentTestExamsForStudent(rows *sql.Rows, r *UserCollectionRepository) ([]*model.UserCollectionTestExams, error) {
 	var UCTL []*model.UserCollectionTestExams
 	for rows.Next() {
@@ -79,36 +80,41 @@ func studentTestExamsForStudent(rows *sql.Rows, r *UserCollectionRepository) ([]
 
 		trueCount := 0
 		falseCount := 0
-		for i := range trueAnswers {
-			var isTrue bool
-			normalizedTrueAnswer := strings.ToLower(strings.TrimSpace(trueAnswers[i]))
+		UCT.AnswerField = []*model.AnswerField{}
 
+		for i := 0; i < len(trueAnswers); i++ {
+			var isTrue bool
+			var studentAnswer *string
 			if i < len(studentAnswers) {
+				normalizedTrueAnswer := strings.ToLower(strings.TrimSpace(trueAnswers[i]))
 				normalizedStudentAnswer := strings.ToLower(strings.TrimSpace(studentAnswers[i]))
-				if normalizedTrueAnswer == normalizedStudentAnswer {
-					isTrue = true
+
+				isTrue = normalizedTrueAnswer == normalizedStudentAnswer
+				if isTrue {
 					trueCount++
 				} else {
-					isTrue = false
 					falseCount++
 				}
+				studentAnswer = &studentAnswers[i]
 			} else {
 				isTrue = false
 				falseCount++
+				var emptyAnswer string
+				studentAnswer = &emptyAnswer
 			}
 
 			UCT.AnswerField = append(UCT.AnswerField, &model.AnswerField{
-				StudentAnswer: &studentAnswers[i],
+				StudentAnswer: studentAnswer,
 				TrueAnswer:    trueAnswers[i],
 				IsTrue:        &isTrue,
 			})
 		}
-		var helper *bool
+
 		for i := len(studentAnswers); i < len(trueAnswers); i++ {
 			UCT.AnswerField = append(UCT.AnswerField, &model.AnswerField{
 				StudentAnswer: nil,
 				TrueAnswer:    trueAnswers[i],
-				IsTrue:        helper,
+				IsTrue:        new(bool),
 			})
 			falseCount++
 		}
