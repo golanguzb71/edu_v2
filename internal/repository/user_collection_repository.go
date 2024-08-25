@@ -45,9 +45,6 @@ func (r *UserCollectionRepository) GetStudentTestExams(code *string, studentId *
 	if err != nil {
 		return nil, errors.New("error while getting student information; please update key by Telegram bot => https://t.me/codevanbot")
 	}
-	if chatId == "" {
-		return nil, errors.New("error while getting student information; please update key by Telegram bot => https://t.me/codevanbot")
-	}
 
 	_ = r.db.QueryRow(`SELECT id FROM users WHERE chat_id=$1`, chatId).Scan(&studentId)
 
