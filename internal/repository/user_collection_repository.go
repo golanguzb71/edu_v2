@@ -49,12 +49,9 @@ func (r *UserCollectionRepository) GetStudentTestExams(code *string, studentId *
 		return nil, errors.New("error while getting student information; please update key by Telegram bot => https://t.me/codevanbot")
 	}
 
-	err = r.db.QueryRow(`SELECT id FROM users WHERE chat_id=$1`, chatId).Scan(&studentId)
-	if err != nil {
-		return nil, err
-	}
+	_ = r.db.QueryRow(`SELECT id FROM users WHERE chat_id=$1`, chatId).Scan(&studentId)
 
-	rows, err := r.db.Query(`SELECT answer_field, collection_id FROM user_collection WHERE user_id=$1 LIMIT $2 OFFSET $3`, studentId, size, offset)
+	rows, err := r.db.Query(`SELECT answer_field, collection_id , created_at FROM user_collection WHERE user_id=$1 order by created_at desc LIMIT $2 OFFSET $3`, studentId, size, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -73,11 +70,7 @@ func studentTestExamsForStudent(rows *sql.Rows, r *UserCollectionRepository) ([]
 		}
 
 		var trueAnswers []string
-		err = r.db.QueryRow(`SELECT answer_field FROM answers WHERE collection_id=$1`, UCT.CollectionID).Scan(pq.Array(&trueAnswers))
-		if err != nil {
-			return nil, err
-		}
-
+		_ = r.db.QueryRow(`SELECT answer_field FROM answers WHERE collection_id=$1`, UCT.CollectionID).Scan(pq.Array(&trueAnswers))
 		trueCount := 0
 		falseCount := 0
 		var answerFields []*model.AnswerField
@@ -133,16 +126,12 @@ func studentTestExamsForStudent(rows *sql.Rows, r *UserCollectionRepository) ([]
 		UCT.TrueCount = &trueCount
 		UCT.FalseCount = &falseCount
 
-		level := determineLevel(trueCount)
+		level := determineLevel(trueCount, len(trueAnswers))
 
 		if level != "" {
 			var group model.Group
-			err := r.db.QueryRow(`SELECT id, name, teacher_name, level, start_time, started_date, days_week, created_at FROM groups WHERE level=$1`, level).
+			_ = r.db.QueryRow(`SELECT id, name, teacher_name, level, start_time, started_date, days_week, created_at FROM groups WHERE level=$1`, level).
 				Scan(&group.ID, &group.Name, &group.TeacherName, &group.Level, &group.StartAt, &group.StartedDate, &group.DaysWeek, &group.CreatedAt)
-			if err != nil {
-				return nil, err
-			}
-
 			UCT.RequestGroup = append(UCT.RequestGroup, &group)
 		}
 		UCTL = append(UCTL, &UCT)
@@ -151,22 +140,24 @@ func studentTestExamsForStudent(rows *sql.Rows, r *UserCollectionRepository) ([]
 	return UCTL, nil
 }
 
-func determineLevel(trueCount int) string {
+func determineLevel(trueCount, totalQuestions int) string {
+	if totalQuestions == 0 {
+		return ""
+	}
+
+	percentage := float64(trueCount) / float64(totalQuestions) * 100
+
 	switch {
-	case trueCount >= 0 && trueCount <= 10:
+	case percentage <= 20:
 		return "BEGINNER"
-	case trueCount > 10 && trueCount <= 20:
+	case percentage > 20 && percentage <= 40:
 		return "ELEMENTARY"
-	case trueCount > 20 && trueCount <= 30:
+	case percentage > 40 && percentage <= 60:
 		return "PRE_INTERMEDIATE"
-	case trueCount > 30 && trueCount <= 40:
+	case percentage > 60 && percentage <= 80:
 		return "INTERMEDIATE"
-	case trueCount > 40 && trueCount <= 50:
+	case percentage > 80:
 		return "UPPER_INTERMEDIATE"
-	case trueCount > 50 && trueCount <= 60:
-		return "ADVANCED"
-	case trueCount > 60:
-		return "PROFICIENT"
 	default:
 		return ""
 	}
