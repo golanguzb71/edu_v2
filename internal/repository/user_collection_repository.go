@@ -34,7 +34,7 @@ func (r *UserCollectionRepository) GetStudentTestExams(code *string, studentId *
 		if code != nil && *code != "KEY_ADM" {
 			return nil, errors.New("forbidden: you don't have access to see this")
 		}
-		rows, err := r.db.Query(`SELECT answer_field, collection_id, created_at FROM user_collection WHERE user_id=$1 LIMIT $2 OFFSET $3`, studentId, size, offset)
+		rows, err := r.db.Query(`SELECT answer_field, collection_id, created_at FROM user_collection WHERE user_id=$1 order by created_at desc LIMIT $2 OFFSET $3`, studentId, size, offset)
 		if err != nil {
 			return nil, err
 		}

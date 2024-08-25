@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -52,9 +53,18 @@ func (r *AnswerRepository) DeleteAnswer(collectionId *string) error {
 }
 
 func (r *AnswerRepository) CreateStudentAnswer(collectionId string, answers []*string, code string) error {
-	//chat_id, err := r.rdb.Get(context.Background(), code).Result()
-	//if err != nil {
-	//	return errors.New("error while getting user information please update your code => https://t.me/codevanbot")
-	//}
+	chatId, err := r.rdb.Get(context.Background(), code).Result()
+	if err != nil {
+		return errors.New("error while getting user information please update your code => https://t.me/codevanbot")
+	}
+	var userId int
+	err = r.db.QueryRow(`SELECT id FROM users WHERE chat_id=$1`, chatId).Scan(&userId)
+	if err != nil {
+		return err
+	}
+	_, err = r.db.Exec(`INSERT INTO user_collection(user_id, answer_field, collection_id) values ($1,$2,$3)`, userId, pq.Array(answers), collectionId)
+	if err != nil {
+		return err
+	}
 	return nil
 }
