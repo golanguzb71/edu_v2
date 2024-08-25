@@ -9,4 +9,5 @@ FROM debian:latest
 WORKDIR /app
 COPY --from=builder /app/main .
 COPY .env .env
+RUN mkdir -p /app/question_images
 CMD ["./main"]

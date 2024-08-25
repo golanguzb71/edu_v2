@@ -32,7 +32,9 @@ func UploadQuestionImages(files []*graphql.Upload, name string) (model.Collectio
 	var collection model.Collection
 	collection.Title = name
 
-	err := os.MkdirAll("question_images", os.ModePerm)
+	// Use an absolute path to avoid issues with relative paths
+	absPath := "/app/question_images"
+	err := os.MkdirAll(absPath, os.ModePerm)
 	if err != nil {
 		return collection, fmt.Errorf("failed to create question_images directory: %w", err)
 	}
@@ -44,7 +46,7 @@ func UploadQuestionImages(files []*graphql.Upload, name string) (model.Collectio
 
 	for _, file := range files {
 		newFileName := uuid.New().String() + filepath.Ext(file.Filename)
-		dstPath := filepath.Join("question_images", newFileName)
+		dstPath := filepath.Join(absPath, newFileName)
 
 		dst, err := os.Create(dstPath)
 		if err != nil {
