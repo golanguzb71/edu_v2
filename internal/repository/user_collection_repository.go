@@ -156,6 +156,6 @@ func determineLevel(trueCount, totalQuestions int) string {
 	case percentage > 80:
 		return "UPPER_INTERMEDIATE"
 	default:
-		return ""
+		return " "
 	}
 }
