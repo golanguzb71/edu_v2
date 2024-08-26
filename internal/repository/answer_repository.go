@@ -20,7 +20,6 @@ func NewAnswerRepository(db *sql.DB, rdb *redis.Client) *AnswerRepository {
 
 func (r *AnswerRepository) CreateAnswer(collectionId *string, answers []*string, isUpdated *bool) error {
 	answersArray := pq.Array(answers)
-
 	if isUpdated != nil && *isUpdated {
 		var isHave bool
 		err := r.db.QueryRow(`SELECT EXISTS(SELECT 1 FROM answers WHERE collection_id=$1)`, *collectionId).Scan(&isHave)
