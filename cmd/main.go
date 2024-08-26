@@ -15,7 +15,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"syscall"
 	"time"
 )
@@ -34,13 +33,15 @@ func main() {
 	collRepo := repository.NewCollectionRepository(db)
 	answerRepo := repository.NewAnswerRepository(db, rdb)
 	userCollRepo := repository.NewUserCollectionRepository(db, rdb)
+	userRepo := repository.NewUserRepository(db)
 
 	answerService := service.NewAnswerService(answerRepo)
 	groupService := service.NewGroupService(groupRepo)
 	collService := service.NewCollectionService(collRepo)
-	userService := service.NewUserCollectionUserService(userCollRepo)
+	userCollService := service.NewUserCollectionUserService(userCollRepo)
+	userService := service.NewUserService(userRepo)
 
-	server := startServer(port, groupService, collService, answerService, userService)
+	server := startServer(port, groupService, collService, answerService, userCollService, userService)
 
 	waitForShutdown(server)
 }
@@ -51,7 +52,7 @@ func loadEnv() {
 	}
 }
 
-func startServer(port string, groupService *service.GroupService, collService *service.CollectionService, answerService *service.AnswerService, userCollService *service.UserCollectionService) *http.Server {
+func startServer(port string, groupService *service.GroupService, collService *service.CollectionService, answerService *service.AnswerService, userCollService *service.UserCollectionService, userService *service.UserService) *http.Server {
 	mux := http.NewServeMux()
 	mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
 
@@ -61,23 +62,9 @@ func startServer(port string, groupService *service.GroupService, collService *s
 			CollService:     collService,
 			AnswerService:   answerService,
 			UserCollService: userCollService,
+			UserService:     userService,
 		},
 	})))
-
-	mux.HandleFunc("/images/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/images/" {
-			http.NotFound(w, r)
-			return
-		}
-		imagePath := filepath.Join("question_images", r.URL.Path[len("/images/"):])
-
-		if _, err := os.Stat(imagePath); os.IsNotExist(err) {
-			http.NotFound(w, r)
-			return
-		}
-
-		http.ServeFile(w, r, imagePath)
-	})
 
 	corsHandler := handlers.CORS(
 		handlers.AllowedOrigins([]string{"*"}),

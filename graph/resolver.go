@@ -11,4 +11,5 @@ type Resolver struct {
 	CollService     *service.CollectionService
 	AnswerService   *service.AnswerService
 	UserCollService *service.UserCollectionService
+	UserService     *service.UserService
 }

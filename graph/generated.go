@@ -88,11 +88,18 @@ type ComplexityRoot struct {
 		GetCollectionByID   func(childComplexity int, collectionID string) int
 		GetGroups           func(childComplexity int, byID *string, orderByLevel *bool) int
 		GetStudentTestExams func(childComplexity int, code *string, studentID *string, page *int, size *int) int
+		GetStudentsList     func(childComplexity int, code *string, page *int, size *int) int
 	}
 
 	Response struct {
 		Message    func(childComplexity int) int
 		StatusCode func(childComplexity int) int
+	}
+
+	Student struct {
+		FullName    func(childComplexity int) int
+		ID          func(childComplexity int) int
+		PhoneNumber func(childComplexity int) int
 	}
 
 	UserCollectionTestExams struct {
@@ -121,6 +128,7 @@ type QueryResolver interface {
 	GetCollection(ctx context.Context) ([]*model.Collection, error)
 	GetCollectionByID(ctx context.Context, collectionID string) (*model.Collection, error)
 	GetStudentTestExams(ctx context.Context, code *string, studentID *string, page *int, size *int) ([]*model.UserCollectionTestExams, error)
+	GetStudentsList(ctx context.Context, code *string, page *int, size *int) ([]*model.Student, error)
 }
 
 type executableSchema struct {
@@ -398,6 +406,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetStudentTestExams(childComplexity, args["code"].(*string), args["studentId"].(*string), args["page"].(*int), args["size"].(*int)), true
 
+	case "Query.getStudentsList":
+		if e.complexity.Query.GetStudentsList == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getStudentsList_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetStudentsList(childComplexity, args["code"].(*string), args["page"].(*int), args["size"].(*int)), true
+
 	case "Response.message":
 		if e.complexity.Response.Message == nil {
 			break
@@ -411,6 +431,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Response.StatusCode(childComplexity), true
+
+	case "Student.fullName":
+		if e.complexity.Student.FullName == nil {
+			break
+		}
+
+		return e.complexity.Student.FullName(childComplexity), true
+
+	case "Student.id":
+		if e.complexity.Student.ID == nil {
+			break
+		}
+
+		return e.complexity.Student.ID(childComplexity), true
+
+	case "Student.phoneNumber":
+		if e.complexity.Student.PhoneNumber == nil {
+			break
+		}
+
+		return e.complexity.Student.PhoneNumber(childComplexity), true
 
 	case "UserCollectionTestExams.answerField":
 		if e.complexity.UserCollectionTestExams.AnswerField == nil {
@@ -967,6 +1008,39 @@ func (ec *executionContext) field_Query_getStudentTestExams_args(ctx context.Con
 		}
 	}
 	args["size"] = arg3
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getStudentsList_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["code"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["code"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["page"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["page"] = arg1
+	var arg2 *int
+	if tmp, ok := rawArgs["size"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("size"))
+		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["size"] = arg2
 	return args, nil
 }
 
@@ -2469,6 +2543,66 @@ func (ec *executionContext) fieldContext_Query_getStudentTestExams(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_getStudentsList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getStudentsList(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetStudentsList(rctx, fc.Args["code"].(*string), fc.Args["page"].(*int), fc.Args["size"].(*int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Student)
+	fc.Result = res
+	return ec.marshalOStudent2ᚕᚖedu_v2ᚋgraphᚋmodelᚐStudent(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getStudentsList(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "fullName":
+				return ec.fieldContext_Student_fullName(ctx, field)
+			case "phoneNumber":
+				return ec.fieldContext_Student_phoneNumber(ctx, field)
+			case "id":
+				return ec.fieldContext_Student_id(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Student", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getStudentsList_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query___type(ctx, field)
 	if err != nil {
@@ -2681,6 +2815,138 @@ func (ec *executionContext) fieldContext_Response_message(_ context.Context, fie
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Student_fullName(ctx context.Context, field graphql.CollectedField, obj *model.Student) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Student_fullName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FullName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Student_fullName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Student",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Student_phoneNumber(ctx context.Context, field graphql.CollectedField, obj *model.Student) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Student_phoneNumber(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PhoneNumber, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Student_phoneNumber(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Student",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Student_id(ctx context.Context, field graphql.CollectedField, obj *model.Student) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Student_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Student_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Student",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -5128,6 +5394,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getStudentsList":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getStudentsList(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -5177,6 +5462,55 @@ func (ec *executionContext) _Response(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "message":
 			out.Values[i] = ec._Response_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var studentImplementors = []string{"Student"}
+
+func (ec *executionContext) _Student(ctx context.Context, sel ast.SelectionSet, obj *model.Student) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, studentImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Student")
+		case "fullName":
+			out.Values[i] = ec._Student_fullName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "phoneNumber":
+			out.Values[i] = ec._Student_phoneNumber(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "id":
+			out.Values[i] = ec._Student_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -6306,6 +6640,54 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	}
 	res := graphql.MarshalString(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOStudent2ᚕᚖedu_v2ᚋgraphᚋmodelᚐStudent(ctx context.Context, sel ast.SelectionSet, v []*model.Student) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOStudent2ᚖedu_v2ᚋgraphᚋmodelᚐStudent(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOStudent2ᚖedu_v2ᚋgraphᚋmodelᚐStudent(ctx context.Context, sel ast.SelectionSet, v *model.Student) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Student(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v interface{}) (*graphql.Upload, error) {

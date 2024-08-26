@@ -53,13 +53,18 @@ type UserCollectionTestExams {
     falseCount:Int
     createdAt:String!
 }
-
+type Student{
+    fullName:String!
+    phoneNumber:String!
+    id:ID!
+}
 
 type Query {
     getGroups(byId: ID, orderByLevel: Boolean): [Group!]
     getCollection:[Collection!]!
     getCollectionById(collectionId:ID!):Collection!
     getStudentTestExams(code:String, studentId:ID , page:Int , size:Int):[UserCollectionTestExams!]!
+    getStudentsList(code:String,page:Int , size:Int):[Student]
 }
 
 

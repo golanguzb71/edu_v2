@@ -7,7 +7,7 @@ package graph
 import (
 	"context"
 	"edu_v2/graph/model"
-	utils "edu_v2/internal/utils"
+	"edu_v2/internal/utils"
 	"strconv"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -15,7 +15,7 @@ import (
 
 // CreateCollection is the resolver for the createCollection field.
 func (r *mutationResolver) CreateCollection(ctx context.Context, name string, file graphql.Upload) (*model.Response, error) {
-	collection, err := utils.UploadQuestionFile(file, name)
+	collection, err := utils.UploadQuestionfile(file, name)
 	if err != nil {
 		return nil, err
 	}
@@ -113,6 +113,11 @@ func (r *queryResolver) GetCollectionByID(ctx context.Context, collectionID stri
 // GetStudentTestExams is the resolver for the getStudentTestExams field.
 func (r *queryResolver) GetStudentTestExams(ctx context.Context, code *string, studentID *string, page *int, size *int) ([]*model.UserCollectionTestExams, error) {
 	return r.UserCollService.GetStudentTestExams(code, studentID, page, size)
+}
+
+// GetStudentsList is the resolver for the getStudentsList field.
+func (r *queryResolver) GetStudentsList(ctx context.Context, code *string, page *int, size *int) ([]*model.Student, error) {
+	return r.UserService.GetStudentsList(code, page, size)
 }
 
 // Mutation returns MutationResolver implementation.

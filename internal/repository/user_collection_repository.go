@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"edu_v2/graph/model"
+	"edu_v2/internal/utils"
 	"errors"
 	"github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
@@ -19,17 +20,7 @@ func NewUserCollectionRepository(db *sql.DB, rdb *redis.Client) *UserCollectionR
 	return &UserCollectionRepository{db: db, rdb: rdb}
 }
 func (r *UserCollectionRepository) GetStudentTestExams(code *string, studentId *string, page *int, size *int) ([]*model.UserCollectionTestExams, error) {
-	if page == nil || *page < 1 {
-		p := 1
-		page = &p
-	}
-	if size == nil || *size < 1 {
-		s := 10
-		size = &s
-	}
-
-	offset := *size * (*page - 1)
-
+	offset := utils.OffSetGenerator(page, size)
 	if studentId != nil {
 		if code != nil && *code != "KEY_ADM" {
 			return nil, errors.New("forbidden: you don't have access to see this")

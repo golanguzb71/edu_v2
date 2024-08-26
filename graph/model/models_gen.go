@@ -43,6 +43,12 @@ type Response struct {
 	Message    string `json:"message"`
 }
 
+type Student struct {
+	FullName    string `json:"fullName"`
+	PhoneNumber string `json:"phoneNumber"`
+	ID          string `json:"id"`
+}
+
 type UserCollectionTestExams struct {
 	CollectionID string         `json:"collectionId"`
 	AnswerField  []*AnswerField `json:"answerField"`
