@@ -19,8 +19,8 @@ func (r *mutationResolver) CreateCollection(ctx context.Context, name string, fi
 	if err != nil {
 		return nil, err
 	}
-	err = r.CollService.CreateCollection(&collection)
-	return utils.AbsResponseChecking(err, "collection created")
+	value, err := r.CollService.CreateCollection(&collection)
+	return utils.AbsResponseChecking(err, strconv.Itoa(*value))
 }
 
 // UpdateCollection is the resolver for the updateCollection field.
