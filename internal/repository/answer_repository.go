@@ -53,7 +53,7 @@ func (r *AnswerRepository) DeleteAnswer(collectionId *string) error {
 }
 
 func (r *AnswerRepository) CreateStudentAnswer(collectionId string, answers []*string, code string) error {
-	chatId, err := r.rdb.Get(context.Background(), code).Result()
+	chatId, err := r.rdb.Get(context.TODO(), code).Result()
 	if err != nil {
 		return errors.New("error while getting user information please update your code => https://t.me/codevanbot")
 	}
