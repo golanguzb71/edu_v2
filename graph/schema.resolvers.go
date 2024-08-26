@@ -7,15 +7,15 @@ package graph
 import (
 	"context"
 	"edu_v2/graph/model"
-	utils "edu_v2/internal"
+	utils "edu_v2/internal/utils"
 	"strconv"
 
 	"github.com/99designs/gqlgen/graphql"
 )
 
 // CreateCollection is the resolver for the createCollection field.
-func (r *mutationResolver) CreateCollection(ctx context.Context, name string, file []*graphql.Upload) (*model.Response, error) {
-	collection, err := utils.UploadQuestionImages(file, name)
+func (r *mutationResolver) CreateCollection(ctx context.Context, name string, file graphql.Upload) (*model.Response, error) {
+	collection, err := utils.UploadQuestionFile(file, name)
 	if err != nil {
 		return nil, err
 	}
@@ -24,7 +24,7 @@ func (r *mutationResolver) CreateCollection(ctx context.Context, name string, fi
 }
 
 // UpdateCollection is the resolver for the updateCollection field.
-func (r *mutationResolver) UpdateCollection(ctx context.Context, id string, name string, file []*graphql.Upload) (*model.Response, error) {
+func (r *mutationResolver) UpdateCollection(ctx context.Context, id string, name string, file *graphql.Upload) (*model.Response, error) {
 	return nil, nil
 }
 

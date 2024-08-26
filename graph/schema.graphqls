@@ -35,7 +35,7 @@ type Response {
 type Collection {
     id :ID!
     title :String!
-    imageUrl: [String!]
+    questions: String!
     createdAt:String!
 }
 
@@ -64,8 +64,8 @@ type Query {
 
 
 type Mutation {
-    createCollection(name: String!, file: [Upload!]!): Response!
-    updateCollection(id: ID!, name: String! , file: [Upload]): Response!
+    createCollection(name: String!, file: Upload!): Response!
+    updateCollection(id: ID!, name: String! , file: Upload): Response!
     deleteCollection(id: ID!): Response!
     createGroup(name: String!, teacherName: String!, level: GroupLevel!, startAt:String!,startDate:String!,daysWeek:DaysWeek!): Response!
     updateGroup(id: ID!, name: String!, teacherName: String!, level: GroupLevel! , startAt:String!,startDate:String!,daysWeek:DaysWeek!): Response!

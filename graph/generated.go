@@ -56,7 +56,7 @@ type ComplexityRoot struct {
 	Collection struct {
 		CreatedAt func(childComplexity int) int
 		ID        func(childComplexity int) int
-		ImageURL  func(childComplexity int) int
+		Questions func(childComplexity int) int
 		Title     func(childComplexity int) int
 	}
 
@@ -73,13 +73,13 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		CreateAnswer        func(childComplexity int, collectionID string, answers []*string, isUpdated *bool) int
-		CreateCollection    func(childComplexity int, name string, file []*graphql.Upload) int
+		CreateCollection    func(childComplexity int, name string, file graphql.Upload) int
 		CreateGroup         func(childComplexity int, name string, teacherName string, level model.GroupLevel, startAt string, startDate string, daysWeek model.DaysWeek) int
 		CreateStudentAnswer func(childComplexity int, collectionID string, answers []*string, code string) int
 		DeleteAnswer        func(childComplexity int, collectionID string) int
 		DeleteCollection    func(childComplexity int, id string) int
 		DeleteGroup         func(childComplexity int, id string) int
-		UpdateCollection    func(childComplexity int, id string, name string, file []*graphql.Upload) int
+		UpdateCollection    func(childComplexity int, id string, name string, file *graphql.Upload) int
 		UpdateGroup         func(childComplexity int, id string, name string, teacherName string, level model.GroupLevel, startAt string, startDate string, daysWeek model.DaysWeek) int
 	}
 
@@ -106,8 +106,8 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	CreateCollection(ctx context.Context, name string, file []*graphql.Upload) (*model.Response, error)
-	UpdateCollection(ctx context.Context, id string, name string, file []*graphql.Upload) (*model.Response, error)
+	CreateCollection(ctx context.Context, name string, file graphql.Upload) (*model.Response, error)
+	UpdateCollection(ctx context.Context, id string, name string, file *graphql.Upload) (*model.Response, error)
 	DeleteCollection(ctx context.Context, id string) (*model.Response, error)
 	CreateGroup(ctx context.Context, name string, teacherName string, level model.GroupLevel, startAt string, startDate string, daysWeek model.DaysWeek) (*model.Response, error)
 	UpdateGroup(ctx context.Context, id string, name string, teacherName string, level model.GroupLevel, startAt string, startDate string, daysWeek model.DaysWeek) (*model.Response, error)
@@ -177,12 +177,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Collection.ID(childComplexity), true
 
-	case "Collection.imageUrl":
-		if e.complexity.Collection.ImageURL == nil {
+	case "Collection.questions":
+		if e.complexity.Collection.Questions == nil {
 			break
 		}
 
-		return e.complexity.Collection.ImageURL(childComplexity), true
+		return e.complexity.Collection.Questions(childComplexity), true
 
 	case "Collection.title":
 		if e.complexity.Collection.Title == nil {
@@ -269,7 +269,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateCollection(childComplexity, args["name"].(string), args["file"].([]*graphql.Upload)), true
+		return e.complexity.Mutation.CreateCollection(childComplexity, args["name"].(string), args["file"].(graphql.Upload)), true
 
 	case "Mutation.createGroup":
 		if e.complexity.Mutation.CreateGroup == nil {
@@ -341,7 +341,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateCollection(childComplexity, args["id"].(string), args["name"].(string), args["file"].([]*graphql.Upload)), true
+		return e.complexity.Mutation.UpdateCollection(childComplexity, args["id"].(string), args["name"].(string), args["file"].(*graphql.Upload)), true
 
 	case "Mutation.updateGroup":
 		if e.complexity.Mutation.UpdateGroup == nil {
@@ -622,10 +622,10 @@ func (ec *executionContext) field_Mutation_createCollection_args(ctx context.Con
 		}
 	}
 	args["name"] = arg0
-	var arg1 []*graphql.Upload
+	var arg1 graphql.Upload
 	if tmp, ok := rawArgs["file"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("file"))
-		arg1, err = ec.unmarshalNUpload2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUploadᚄ(ctx, tmp)
+		arg1, err = ec.unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -793,10 +793,10 @@ func (ec *executionContext) field_Mutation_updateCollection_args(ctx context.Con
 		}
 	}
 	args["name"] = arg1
-	var arg2 []*graphql.Upload
+	var arg2 *graphql.Upload
 	if tmp, ok := rawArgs["file"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("file"))
-		arg2, err = ec.unmarshalOUpload2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, tmp)
+		arg2, err = ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1222,8 +1222,8 @@ func (ec *executionContext) fieldContext_Collection_title(_ context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Collection_imageUrl(ctx context.Context, field graphql.CollectedField, obj *model.Collection) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Collection_imageUrl(ctx, field)
+func (ec *executionContext) _Collection_questions(ctx context.Context, field graphql.CollectedField, obj *model.Collection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Collection_questions(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1236,21 +1236,24 @@ func (ec *executionContext) _Collection_imageUrl(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ImageURL, nil
+		return obj.Questions, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.([]string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Collection_imageUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Collection_questions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Collection",
 		Field:      field,
@@ -1673,7 +1676,7 @@ func (ec *executionContext) _Mutation_createCollection(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateCollection(rctx, fc.Args["name"].(string), fc.Args["file"].([]*graphql.Upload))
+		return ec.resolvers.Mutation().CreateCollection(rctx, fc.Args["name"].(string), fc.Args["file"].(graphql.Upload))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1734,7 +1737,7 @@ func (ec *executionContext) _Mutation_updateCollection(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateCollection(rctx, fc.Args["id"].(string), fc.Args["name"].(string), fc.Args["file"].([]*graphql.Upload))
+		return ec.resolvers.Mutation().UpdateCollection(rctx, fc.Args["id"].(string), fc.Args["name"].(string), fc.Args["file"].(*graphql.Upload))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2321,8 +2324,8 @@ func (ec *executionContext) fieldContext_Query_getCollection(_ context.Context, 
 				return ec.fieldContext_Collection_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Collection_title(ctx, field)
-			case "imageUrl":
-				return ec.fieldContext_Collection_imageUrl(ctx, field)
+			case "questions":
+				return ec.fieldContext_Collection_questions(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Collection_createdAt(ctx, field)
 			}
@@ -2375,8 +2378,8 @@ func (ec *executionContext) fieldContext_Query_getCollectionById(ctx context.Con
 				return ec.fieldContext_Collection_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Collection_title(ctx, field)
-			case "imageUrl":
-				return ec.fieldContext_Collection_imageUrl(ctx, field)
+			case "questions":
+				return ec.fieldContext_Collection_questions(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Collection_createdAt(ctx, field)
 			}
@@ -4809,8 +4812,11 @@ func (ec *executionContext) _Collection(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "imageUrl":
-			out.Values[i] = ec._Collection_imageUrl(ctx, field, obj)
+		case "questions":
+			out.Values[i] = ec._Collection_questions(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "createdAt":
 			out.Values[i] = ec._Collection_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -5804,51 +5810,13 @@ func (ec *executionContext) marshalNString2ᚕᚖstring(ctx context.Context, sel
 	return ret
 }
 
-func (ec *executionContext) unmarshalNUpload2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUploadᚄ(ctx context.Context, v interface{}) ([]*graphql.Upload, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*graphql.Upload, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalNUpload2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUploadᚄ(ctx context.Context, sel ast.SelectionSet, v []*graphql.Upload) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, sel, v[i])
-	}
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) unmarshalNUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v interface{}) (*graphql.Upload, error) {
+func (ec *executionContext) unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v interface{}) (graphql.Upload, error) {
 	res, err := graphql.UnmarshalUpload(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, sel ast.SelectionSet, v *graphql.Upload) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	res := graphql.MarshalUpload(*v)
+func (ec *executionContext) marshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, sel ast.SelectionSet, v graphql.Upload) graphql.Marshaler {
+	res := graphql.MarshalUpload(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -6324,44 +6292,6 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return res
 }
 
-func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]string, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalOString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
-	}
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
 	if v == nil {
 		return nil, nil
@@ -6376,38 +6306,6 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	}
 	res := graphql.MarshalString(*v)
 	return res
-}
-
-func (ec *executionContext) unmarshalOUpload2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v interface{}) ([]*graphql.Upload, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*graphql.Upload, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalOUpload2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, sel ast.SelectionSet, v []*graphql.Upload) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, sel, v[i])
-	}
-
-	return ret
 }
 
 func (ec *executionContext) unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v interface{}) (*graphql.Upload, error) {

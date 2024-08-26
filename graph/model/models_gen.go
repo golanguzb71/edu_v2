@@ -15,10 +15,10 @@ type AnswerField struct {
 }
 
 type Collection struct {
-	ID        string   `json:"id"`
-	Title     string   `json:"title"`
-	ImageURL  []string `json:"imageUrl,omitempty"`
-	CreatedAt string   `json:"createdAt"`
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	Questions string `json:"questions"`
+	CreatedAt string `json:"createdAt"`
 }
 
 type Group struct {
