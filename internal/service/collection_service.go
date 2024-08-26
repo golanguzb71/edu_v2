@@ -14,7 +14,7 @@ func NewCollectionService(repo *repository.CollectionRepository) *CollectionServ
 	return &CollectionService{repo: repo}
 }
 
-func (s *CollectionService) CreateCollection(collection *model.Collection) error {
+func (s *CollectionService) CreateCollection(collection *model.Collection) (*int, error) {
 	return s.repo.Create(collection)
 }
 func (s *CollectionService) GetCollection(id string) (*model.Collection, error) {

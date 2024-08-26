@@ -14,13 +14,14 @@ func NewCollectionRepository(db *sql.DB) *CollectionRepository {
 	return &CollectionRepository{db: db}
 }
 
-func (r *CollectionRepository) Create(collection *model.Collection) error {
-	_, err := r.db.Exec("INSERT INTO collections (title, questions) VALUES ($1 , $2)", collection.Title, collection.Questions)
+func (r *CollectionRepository) Create(collection *model.Collection) (*int, error) {
+	var value int
+	err := r.db.QueryRow("INSERT INTO collections (title, questions) VALUES ($1 , $2) RETURNING id", collection.Title, collection.Questions).Scan(&value)
 	if err != nil {
 		log.Printf("Error inserting collection: %v", err)
-		return err
+		return nil, err
 	}
-	return nil
+	return &value, nil
 }
 
 func (r *CollectionRepository) Get(id string) (*model.Collection, error) {
