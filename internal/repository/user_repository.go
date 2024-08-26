@@ -22,7 +22,7 @@ func (r *UserRepository) GetStudentsList(code *string, page *int, size *int) ([]
 		return []*model.Student{}, errors.New("you are not admin")
 	}
 	offset := utils.OffSetGenerator(page, size)
-	rows, err := r.db.Query(`SELECT id, phone_number, full_name FROM users order by created_at desc LIMIT $1 OFFSET $2`, page, offset)
+	rows, err := r.db.Query(`SELECT id, phone_number, full_name FROM users order by created_at desc LIMIT $1 OFFSET $2`, size, offset)
 	if err != nil {
 		return nil, err
 	}
