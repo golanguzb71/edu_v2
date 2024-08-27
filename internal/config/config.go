@@ -14,12 +14,13 @@ var DB *sql.DB
 var RDB *redis.Client
 
 func ConnectPostgres() {
-	connStr := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable host=%s port=%s",
-		os.Getenv("POSTGRES_USER"),
-		os.Getenv("POSTGRES_PASSWORD"),
-		os.Getenv("POSTGRES_DATABASE"),
-		os.Getenv("POSTGRES_HOST"),
-		os.Getenv("POSTGRES_PORT"),
+	connStr := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=%s host=%s port=%s",
+		os.Getenv("DO_POSTGRES_USER"),
+		os.Getenv("DO_POSTGRES_PASSWORD"),
+		os.Getenv("DO_POSTGRES_DATABASE"),
+		os.Getenv("DO_POSTGRES_SSLMODE"),
+		os.Getenv("DO_POSTGRES_HOST"),
+		os.Getenv("DO_POSTGRES_PORT"),
 	)
 
 	var err error
@@ -27,6 +28,10 @@ func ConnectPostgres() {
 	if err != nil {
 		log.Fatal("Error opening database connection: ", err)
 	}
+	if err := DB.Ping(); err != nil {
+		log.Fatalf("Error pinging database: %v", err)
+	}
+
 	fmt.Println("Database connection successful")
 }
 
