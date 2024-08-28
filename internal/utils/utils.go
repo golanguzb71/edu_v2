@@ -2,6 +2,7 @@ package utils
 
 import (
 	"edu_v2/graph/model"
+	"errors"
 )
 
 func AbsResponseChecking(err error, msg string) (*model.Response, error) {
@@ -33,4 +34,11 @@ func OffSetGenerator(page, size *int) int {
 	}
 
 	return *size * (*page - 1)
+}
+
+func CheckAdminCode(code string) error {
+	if code != "KEY_ADM" {
+		return errors.New("you are not admin pls get your code if you admin => https:/t.me/codevanbot")
+	}
+	return nil
 }

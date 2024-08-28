@@ -53,6 +53,7 @@ type UserCollectionTestExams {
     falseCount:Int
     createdAt:String!
 }
+
 type Student{
     fullName:String!
     phoneNumber:String!
@@ -60,22 +61,23 @@ type Student{
 }
 
 type Query {
-    getGroups(byId: ID, orderByLevel: Boolean): [Group!]
+    getGroups(code:String!, byId: ID, orderByLevel: Boolean , page:Int , size:Int): [Group!]
     getCollection:[Collection!]!
     getCollectionById(collectionId:ID!):Collection!
+    getCollectionActive:Collection!
     getStudentTestExams(code:String, studentId:ID , page:Int , size:Int):[UserCollectionTestExams!]!
-    getStudentsList(code:String,page:Int , size:Int):[Student]
+    getStudentsList(code:String!,page:Int , size:Int):[Student]
 }
 
 
 type Mutation {
-    createCollection(name: String!, file: Upload!): Response!
-    updateCollection(id: ID!, name: String! , file: Upload): Response!
-    deleteCollection(id: ID!): Response!
-    createGroup(name: String!, teacherName: String!, level: GroupLevel!, startAt:String!,startDate:String!,daysWeek:DaysWeek!): Response!
-    updateGroup(id: ID!, name: String!, teacherName: String!, level: GroupLevel! , startAt:String!,startDate:String!,daysWeek:DaysWeek!): Response!
-    deleteGroup(id: ID!): Response!
-    createAnswer(collectionId:ID! , answers:[String]! , isUpdated:Boolean):Response!
-    deleteAnswer(collectionId:ID!):Response!
+    createCollection(code:String!, name: String!, file: Upload!): Response!
+    updateCollectionActive(code:String! , collectionId:ID! ): Response!
+    deleteCollection(code:String! , id: ID!): Response!
+    createGroup(code:String!, name: String!, teacherName: String!, level: GroupLevel!, startAt:String!,startDate:String!,daysWeek:DaysWeek!): Response!
+    updateGroup(code:String!,id: ID!, name: String!, teacherName: String!, level: GroupLevel! , startAt:String!,startDate:String!,daysWeek:DaysWeek!): Response!
+    deleteGroup(code:String!,id: ID!): Response!
+    createAnswer(code:String!,collectionId:ID! , answers:[String]! , isUpdated:Boolean):Response!
+    deleteAnswer(code:String!,collectionId:ID!):Response!
     createStudentAnswer(collectionId:ID! , answers:[String]! , code:String!):Response!
 }

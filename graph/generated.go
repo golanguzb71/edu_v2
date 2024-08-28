@@ -72,23 +72,24 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateAnswer        func(childComplexity int, collectionID string, answers []*string, isUpdated *bool) int
-		CreateCollection    func(childComplexity int, name string, file graphql.Upload) int
-		CreateGroup         func(childComplexity int, name string, teacherName string, level model.GroupLevel, startAt string, startDate string, daysWeek model.DaysWeek) int
-		CreateStudentAnswer func(childComplexity int, collectionID string, answers []*string, code string) int
-		DeleteAnswer        func(childComplexity int, collectionID string) int
-		DeleteCollection    func(childComplexity int, id string) int
-		DeleteGroup         func(childComplexity int, id string) int
-		UpdateCollection    func(childComplexity int, id string, name string, file *graphql.Upload) int
-		UpdateGroup         func(childComplexity int, id string, name string, teacherName string, level model.GroupLevel, startAt string, startDate string, daysWeek model.DaysWeek) int
+		CreateAnswer           func(childComplexity int, code string, collectionID string, answers []*string, isUpdated *bool) int
+		CreateCollection       func(childComplexity int, code string, name string, file graphql.Upload) int
+		CreateGroup            func(childComplexity int, code string, name string, teacherName string, level model.GroupLevel, startAt string, startDate string, daysWeek model.DaysWeek) int
+		CreateStudentAnswer    func(childComplexity int, collectionID string, answers []*string, code string) int
+		DeleteAnswer           func(childComplexity int, code string, collectionID string) int
+		DeleteCollection       func(childComplexity int, code string, id string) int
+		DeleteGroup            func(childComplexity int, code string, id string) int
+		UpdateCollectionActive func(childComplexity int, code string, collectionID string) int
+		UpdateGroup            func(childComplexity int, code string, id string, name string, teacherName string, level model.GroupLevel, startAt string, startDate string, daysWeek model.DaysWeek) int
 	}
 
 	Query struct {
 		GetCollection       func(childComplexity int) int
+		GetCollectionActive func(childComplexity int) int
 		GetCollectionByID   func(childComplexity int, collectionID string) int
-		GetGroups           func(childComplexity int, byID *string, orderByLevel *bool) int
+		GetGroups           func(childComplexity int, code string, byID *string, orderByLevel *bool, page *int, size *int) int
 		GetStudentTestExams func(childComplexity int, code *string, studentID *string, page *int, size *int) int
-		GetStudentsList     func(childComplexity int, code *string, page *int, size *int) int
+		GetStudentsList     func(childComplexity int, code string, page *int, size *int) int
 	}
 
 	Response struct {
@@ -113,22 +114,23 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	CreateCollection(ctx context.Context, name string, file graphql.Upload) (*model.Response, error)
-	UpdateCollection(ctx context.Context, id string, name string, file *graphql.Upload) (*model.Response, error)
-	DeleteCollection(ctx context.Context, id string) (*model.Response, error)
-	CreateGroup(ctx context.Context, name string, teacherName string, level model.GroupLevel, startAt string, startDate string, daysWeek model.DaysWeek) (*model.Response, error)
-	UpdateGroup(ctx context.Context, id string, name string, teacherName string, level model.GroupLevel, startAt string, startDate string, daysWeek model.DaysWeek) (*model.Response, error)
-	DeleteGroup(ctx context.Context, id string) (*model.Response, error)
-	CreateAnswer(ctx context.Context, collectionID string, answers []*string, isUpdated *bool) (*model.Response, error)
-	DeleteAnswer(ctx context.Context, collectionID string) (*model.Response, error)
+	CreateCollection(ctx context.Context, code string, name string, file graphql.Upload) (*model.Response, error)
+	UpdateCollectionActive(ctx context.Context, code string, collectionID string) (*model.Response, error)
+	DeleteCollection(ctx context.Context, code string, id string) (*model.Response, error)
+	CreateGroup(ctx context.Context, code string, name string, teacherName string, level model.GroupLevel, startAt string, startDate string, daysWeek model.DaysWeek) (*model.Response, error)
+	UpdateGroup(ctx context.Context, code string, id string, name string, teacherName string, level model.GroupLevel, startAt string, startDate string, daysWeek model.DaysWeek) (*model.Response, error)
+	DeleteGroup(ctx context.Context, code string, id string) (*model.Response, error)
+	CreateAnswer(ctx context.Context, code string, collectionID string, answers []*string, isUpdated *bool) (*model.Response, error)
+	DeleteAnswer(ctx context.Context, code string, collectionID string) (*model.Response, error)
 	CreateStudentAnswer(ctx context.Context, collectionID string, answers []*string, code string) (*model.Response, error)
 }
 type QueryResolver interface {
-	GetGroups(ctx context.Context, byID *string, orderByLevel *bool) ([]*model.Group, error)
+	GetGroups(ctx context.Context, code string, byID *string, orderByLevel *bool, page *int, size *int) ([]*model.Group, error)
 	GetCollection(ctx context.Context) ([]*model.Collection, error)
 	GetCollectionByID(ctx context.Context, collectionID string) (*model.Collection, error)
+	GetCollectionActive(ctx context.Context) (*model.Collection, error)
 	GetStudentTestExams(ctx context.Context, code *string, studentID *string, page *int, size *int) ([]*model.UserCollectionTestExams, error)
-	GetStudentsList(ctx context.Context, code *string, page *int, size *int) ([]*model.Student, error)
+	GetStudentsList(ctx context.Context, code string, page *int, size *int) ([]*model.Student, error)
 }
 
 type executableSchema struct {
@@ -265,7 +267,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateAnswer(childComplexity, args["collectionId"].(string), args["answers"].([]*string), args["isUpdated"].(*bool)), true
+		return e.complexity.Mutation.CreateAnswer(childComplexity, args["code"].(string), args["collectionId"].(string), args["answers"].([]*string), args["isUpdated"].(*bool)), true
 
 	case "Mutation.createCollection":
 		if e.complexity.Mutation.CreateCollection == nil {
@@ -277,7 +279,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateCollection(childComplexity, args["name"].(string), args["file"].(graphql.Upload)), true
+		return e.complexity.Mutation.CreateCollection(childComplexity, args["code"].(string), args["name"].(string), args["file"].(graphql.Upload)), true
 
 	case "Mutation.createGroup":
 		if e.complexity.Mutation.CreateGroup == nil {
@@ -289,7 +291,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateGroup(childComplexity, args["name"].(string), args["teacherName"].(string), args["level"].(model.GroupLevel), args["startAt"].(string), args["startDate"].(string), args["daysWeek"].(model.DaysWeek)), true
+		return e.complexity.Mutation.CreateGroup(childComplexity, args["code"].(string), args["name"].(string), args["teacherName"].(string), args["level"].(model.GroupLevel), args["startAt"].(string), args["startDate"].(string), args["daysWeek"].(model.DaysWeek)), true
 
 	case "Mutation.createStudentAnswer":
 		if e.complexity.Mutation.CreateStudentAnswer == nil {
@@ -313,7 +315,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteAnswer(childComplexity, args["collectionId"].(string)), true
+		return e.complexity.Mutation.DeleteAnswer(childComplexity, args["code"].(string), args["collectionId"].(string)), true
 
 	case "Mutation.deleteCollection":
 		if e.complexity.Mutation.DeleteCollection == nil {
@@ -325,7 +327,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteCollection(childComplexity, args["id"].(string)), true
+		return e.complexity.Mutation.DeleteCollection(childComplexity, args["code"].(string), args["id"].(string)), true
 
 	case "Mutation.deleteGroup":
 		if e.complexity.Mutation.DeleteGroup == nil {
@@ -337,19 +339,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteGroup(childComplexity, args["id"].(string)), true
+		return e.complexity.Mutation.DeleteGroup(childComplexity, args["code"].(string), args["id"].(string)), true
 
-	case "Mutation.updateCollection":
-		if e.complexity.Mutation.UpdateCollection == nil {
+	case "Mutation.updateCollectionActive":
+		if e.complexity.Mutation.UpdateCollectionActive == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_updateCollection_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_updateCollectionActive_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateCollection(childComplexity, args["id"].(string), args["name"].(string), args["file"].(*graphql.Upload)), true
+		return e.complexity.Mutation.UpdateCollectionActive(childComplexity, args["code"].(string), args["collectionId"].(string)), true
 
 	case "Mutation.updateGroup":
 		if e.complexity.Mutation.UpdateGroup == nil {
@@ -361,7 +363,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateGroup(childComplexity, args["id"].(string), args["name"].(string), args["teacherName"].(string), args["level"].(model.GroupLevel), args["startAt"].(string), args["startDate"].(string), args["daysWeek"].(model.DaysWeek)), true
+		return e.complexity.Mutation.UpdateGroup(childComplexity, args["code"].(string), args["id"].(string), args["name"].(string), args["teacherName"].(string), args["level"].(model.GroupLevel), args["startAt"].(string), args["startDate"].(string), args["daysWeek"].(model.DaysWeek)), true
 
 	case "Query.getCollection":
 		if e.complexity.Query.GetCollection == nil {
@@ -369,6 +371,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetCollection(childComplexity), true
+
+	case "Query.getCollectionActive":
+		if e.complexity.Query.GetCollectionActive == nil {
+			break
+		}
+
+		return e.complexity.Query.GetCollectionActive(childComplexity), true
 
 	case "Query.getCollectionById":
 		if e.complexity.Query.GetCollectionByID == nil {
@@ -392,7 +401,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.GetGroups(childComplexity, args["byId"].(*string), args["orderByLevel"].(*bool)), true
+		return e.complexity.Query.GetGroups(childComplexity, args["code"].(string), args["byId"].(*string), args["orderByLevel"].(*bool), args["page"].(*int), args["size"].(*int)), true
 
 	case "Query.getStudentTestExams":
 		if e.complexity.Query.GetStudentTestExams == nil {
@@ -416,7 +425,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.GetStudentsList(childComplexity, args["code"].(*string), args["page"].(*int), args["size"].(*int)), true
+		return e.complexity.Query.GetStudentsList(childComplexity, args["code"].(string), args["page"].(*int), args["size"].(*int)), true
 
 	case "Response.message":
 		if e.complexity.Response.Message == nil {
@@ -622,32 +631,41 @@ func (ec *executionContext) field_Mutation_createAnswer_args(ctx context.Context
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
+	if tmp, ok := rawArgs["code"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["code"] = arg0
+	var arg1 string
 	if tmp, ok := rawArgs["collectionId"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("collectionId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["collectionId"] = arg0
-	var arg1 []*string
+	args["collectionId"] = arg1
+	var arg2 []*string
 	if tmp, ok := rawArgs["answers"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("answers"))
-		arg1, err = ec.unmarshalNString2ᚕᚖstring(ctx, tmp)
+		arg2, err = ec.unmarshalNString2ᚕᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["answers"] = arg1
-	var arg2 *bool
+	args["answers"] = arg2
+	var arg3 *bool
 	if tmp, ok := rawArgs["isUpdated"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isUpdated"))
-		arg2, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+		arg3, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["isUpdated"] = arg2
+	args["isUpdated"] = arg3
 	return args, nil
 }
 
@@ -655,176 +673,14 @@ func (ec *executionContext) field_Mutation_createCollection_args(ctx context.Con
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["name"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["name"] = arg0
-	var arg1 graphql.Upload
-	if tmp, ok := rawArgs["file"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("file"))
-		arg1, err = ec.unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["file"] = arg1
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_createGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["name"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["name"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["teacherName"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("teacherName"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["teacherName"] = arg1
-	var arg2 model.GroupLevel
-	if tmp, ok := rawArgs["level"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("level"))
-		arg2, err = ec.unmarshalNGroupLevel2edu_v2ᚋgraphᚋmodelᚐGroupLevel(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["level"] = arg2
-	var arg3 string
-	if tmp, ok := rawArgs["startAt"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startAt"))
-		arg3, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["startAt"] = arg3
-	var arg4 string
-	if tmp, ok := rawArgs["startDate"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startDate"))
-		arg4, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["startDate"] = arg4
-	var arg5 model.DaysWeek
-	if tmp, ok := rawArgs["daysWeek"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("daysWeek"))
-		arg5, err = ec.unmarshalNDaysWeek2edu_v2ᚋgraphᚋmodelᚐDaysWeek(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["daysWeek"] = arg5
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_createStudentAnswer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["collectionId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("collectionId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["collectionId"] = arg0
-	var arg1 []*string
-	if tmp, ok := rawArgs["answers"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("answers"))
-		arg1, err = ec.unmarshalNString2ᚕᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["answers"] = arg1
-	var arg2 string
 	if tmp, ok := rawArgs["code"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
-		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["code"] = arg2
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_deleteAnswer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["collectionId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("collectionId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["collectionId"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_deleteCollection_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_deleteGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_updateCollection_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
+	args["code"] = arg0
 	var arg1 string
 	if tmp, ok := rawArgs["name"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
@@ -834,10 +690,10 @@ func (ec *executionContext) field_Mutation_updateCollection_args(ctx context.Con
 		}
 	}
 	args["name"] = arg1
-	var arg2 *graphql.Upload
+	var arg2 graphql.Upload
 	if tmp, ok := rawArgs["file"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("file"))
-		arg2, err = ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, tmp)
+		arg2, err = ec.unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -846,18 +702,18 @@ func (ec *executionContext) field_Mutation_updateCollection_args(ctx context.Con
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_updateGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_createGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+	if tmp, ok := rawArgs["code"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["id"] = arg0
+	args["code"] = arg0
 	var arg1 string
 	if tmp, ok := rawArgs["name"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
@@ -915,6 +771,213 @@ func (ec *executionContext) field_Mutation_updateGroup_args(ctx context.Context,
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_createStudentAnswer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["collectionId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("collectionId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["collectionId"] = arg0
+	var arg1 []*string
+	if tmp, ok := rawArgs["answers"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("answers"))
+		arg1, err = ec.unmarshalNString2ᚕᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["answers"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["code"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["code"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteAnswer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["code"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["code"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["collectionId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("collectionId"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["collectionId"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteCollection_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["code"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["code"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["code"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["code"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateCollectionActive_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["code"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["code"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["collectionId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("collectionId"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["collectionId"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["code"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["code"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["name"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["teacherName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("teacherName"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["teacherName"] = arg3
+	var arg4 model.GroupLevel
+	if tmp, ok := rawArgs["level"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("level"))
+		arg4, err = ec.unmarshalNGroupLevel2edu_v2ᚋgraphᚋmodelᚐGroupLevel(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["level"] = arg4
+	var arg5 string
+	if tmp, ok := rawArgs["startAt"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startAt"))
+		arg5, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["startAt"] = arg5
+	var arg6 string
+	if tmp, ok := rawArgs["startDate"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startDate"))
+		arg6, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["startDate"] = arg6
+	var arg7 model.DaysWeek
+	if tmp, ok := rawArgs["daysWeek"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("daysWeek"))
+		arg7, err = ec.unmarshalNDaysWeek2edu_v2ᚋgraphᚋmodelᚐDaysWeek(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["daysWeek"] = arg7
+	return args, nil
+}
+
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -948,24 +1011,51 @@ func (ec *executionContext) field_Query_getCollectionById_args(ctx context.Conte
 func (ec *executionContext) field_Query_getGroups_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *string
+	var arg0 string
+	if tmp, ok := rawArgs["code"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["code"] = arg0
+	var arg1 *string
 	if tmp, ok := rawArgs["byId"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("byId"))
-		arg0, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+		arg1, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["byId"] = arg0
-	var arg1 *bool
+	args["byId"] = arg1
+	var arg2 *bool
 	if tmp, ok := rawArgs["orderByLevel"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderByLevel"))
-		arg1, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+		arg2, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["orderByLevel"] = arg1
+	args["orderByLevel"] = arg2
+	var arg3 *int
+	if tmp, ok := rawArgs["page"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
+		arg3, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["page"] = arg3
+	var arg4 *int
+	if tmp, ok := rawArgs["size"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("size"))
+		arg4, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["size"] = arg4
 	return args, nil
 }
 
@@ -1014,10 +1104,10 @@ func (ec *executionContext) field_Query_getStudentTestExams_args(ctx context.Con
 func (ec *executionContext) field_Query_getStudentsList_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *string
+	var arg0 string
 	if tmp, ok := rawArgs["code"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
-		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1750,7 +1840,7 @@ func (ec *executionContext) _Mutation_createCollection(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateCollection(rctx, fc.Args["name"].(string), fc.Args["file"].(graphql.Upload))
+		return ec.resolvers.Mutation().CreateCollection(rctx, fc.Args["code"].(string), fc.Args["name"].(string), fc.Args["file"].(graphql.Upload))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1797,8 +1887,8 @@ func (ec *executionContext) fieldContext_Mutation_createCollection(ctx context.C
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_updateCollection(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateCollection(ctx, field)
+func (ec *executionContext) _Mutation_updateCollectionActive(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateCollectionActive(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1811,7 +1901,7 @@ func (ec *executionContext) _Mutation_updateCollection(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateCollection(rctx, fc.Args["id"].(string), fc.Args["name"].(string), fc.Args["file"].(*graphql.Upload))
+		return ec.resolvers.Mutation().UpdateCollectionActive(rctx, fc.Args["code"].(string), fc.Args["collectionId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1828,7 +1918,7 @@ func (ec *executionContext) _Mutation_updateCollection(ctx context.Context, fiel
 	return ec.marshalNResponse2ᚖedu_v2ᚋgraphᚋmodelᚐResponse(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_updateCollection(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_updateCollectionActive(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1851,7 +1941,7 @@ func (ec *executionContext) fieldContext_Mutation_updateCollection(ctx context.C
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateCollection_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_updateCollectionActive_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -1872,7 +1962,7 @@ func (ec *executionContext) _Mutation_deleteCollection(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteCollection(rctx, fc.Args["id"].(string))
+		return ec.resolvers.Mutation().DeleteCollection(rctx, fc.Args["code"].(string), fc.Args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1933,7 +2023,7 @@ func (ec *executionContext) _Mutation_createGroup(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateGroup(rctx, fc.Args["name"].(string), fc.Args["teacherName"].(string), fc.Args["level"].(model.GroupLevel), fc.Args["startAt"].(string), fc.Args["startDate"].(string), fc.Args["daysWeek"].(model.DaysWeek))
+		return ec.resolvers.Mutation().CreateGroup(rctx, fc.Args["code"].(string), fc.Args["name"].(string), fc.Args["teacherName"].(string), fc.Args["level"].(model.GroupLevel), fc.Args["startAt"].(string), fc.Args["startDate"].(string), fc.Args["daysWeek"].(model.DaysWeek))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1994,7 +2084,7 @@ func (ec *executionContext) _Mutation_updateGroup(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateGroup(rctx, fc.Args["id"].(string), fc.Args["name"].(string), fc.Args["teacherName"].(string), fc.Args["level"].(model.GroupLevel), fc.Args["startAt"].(string), fc.Args["startDate"].(string), fc.Args["daysWeek"].(model.DaysWeek))
+		return ec.resolvers.Mutation().UpdateGroup(rctx, fc.Args["code"].(string), fc.Args["id"].(string), fc.Args["name"].(string), fc.Args["teacherName"].(string), fc.Args["level"].(model.GroupLevel), fc.Args["startAt"].(string), fc.Args["startDate"].(string), fc.Args["daysWeek"].(model.DaysWeek))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2055,7 +2145,7 @@ func (ec *executionContext) _Mutation_deleteGroup(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteGroup(rctx, fc.Args["id"].(string))
+		return ec.resolvers.Mutation().DeleteGroup(rctx, fc.Args["code"].(string), fc.Args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2116,7 +2206,7 @@ func (ec *executionContext) _Mutation_createAnswer(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateAnswer(rctx, fc.Args["collectionId"].(string), fc.Args["answers"].([]*string), fc.Args["isUpdated"].(*bool))
+		return ec.resolvers.Mutation().CreateAnswer(rctx, fc.Args["code"].(string), fc.Args["collectionId"].(string), fc.Args["answers"].([]*string), fc.Args["isUpdated"].(*bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2177,7 +2267,7 @@ func (ec *executionContext) _Mutation_deleteAnswer(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteAnswer(rctx, fc.Args["collectionId"].(string))
+		return ec.resolvers.Mutation().DeleteAnswer(rctx, fc.Args["code"].(string), fc.Args["collectionId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2299,7 +2389,7 @@ func (ec *executionContext) _Query_getGroups(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetGroups(rctx, fc.Args["byId"].(*string), fc.Args["orderByLevel"].(*bool))
+		return ec.resolvers.Query().GetGroups(rctx, fc.Args["code"].(string), fc.Args["byId"].(*string), fc.Args["orderByLevel"].(*bool), fc.Args["page"].(*int), fc.Args["size"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2474,6 +2564,60 @@ func (ec *executionContext) fieldContext_Query_getCollectionById(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_getCollectionActive(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getCollectionActive(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetCollectionActive(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Collection)
+	fc.Result = res
+	return ec.marshalNCollection2ᚖedu_v2ᚋgraphᚋmodelᚐCollection(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getCollectionActive(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Collection_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Collection_title(ctx, field)
+			case "questions":
+				return ec.fieldContext_Collection_questions(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Collection_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Collection", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_getStudentTestExams(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_getStudentTestExams(ctx, field)
 	if err != nil {
@@ -2557,7 +2701,7 @@ func (ec *executionContext) _Query_getStudentsList(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetStudentsList(rctx, fc.Args["code"].(*string), fc.Args["page"].(*int), fc.Args["size"].(*int))
+		return ec.resolvers.Query().GetStudentsList(rctx, fc.Args["code"].(string), fc.Args["page"].(*int), fc.Args["size"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5211,9 +5355,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "updateCollection":
+		case "updateCollectionActive":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateCollection(ctx, field)
+				return ec._Mutation_updateCollectionActive(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -5360,6 +5504,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getCollectionById(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getCollectionActive":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getCollectionActive(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -6688,22 +6854,6 @@ func (ec *executionContext) marshalOStudent2ᚖedu_v2ᚋgraphᚋmodelᚐStudent(
 		return graphql.Null
 	}
 	return ec._Student(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v interface{}) (*graphql.Upload, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := graphql.UnmarshalUpload(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, sel ast.SelectionSet, v *graphql.Upload) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	res := graphql.MarshalUpload(*v)
-	return res
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

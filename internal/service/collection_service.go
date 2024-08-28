@@ -36,3 +36,7 @@ func (s *CollectionService) DeleteCollection(id string) error {
 func (s *CollectionService) GetCollections() ([]*model.Collection, error) {
 	return s.repo.GetCollections()
 }
+
+func (s *CollectionService) UpdateCollectionActive(id string) error {
+	return s.repo.UpdateCollectionActive(id)
+}

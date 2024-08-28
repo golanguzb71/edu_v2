@@ -13,6 +13,6 @@ func NewUserService(userRepo *repository.UserRepository) *UserService {
 	return &UserService{userRepo: userRepo}
 }
 
-func (s *UserService) GetStudentsList(code *string, page *int, size *int) ([]*model.Student, error) {
-	return s.userRepo.GetStudentsList(code, page, size)
+func (s *UserService) GetStudentsList(page *int, size *int) ([]*model.Student, error) {
+	return s.userRepo.GetStudentsList(page, size)
 }

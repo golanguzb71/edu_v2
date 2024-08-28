@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"edu_v2/graph/model"
 	"edu_v2/internal/utils"
-	"errors"
 )
 
 type UserRepository struct {
@@ -17,10 +16,7 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	}
 }
 
-func (r *UserRepository) GetStudentsList(code *string, page *int, size *int) ([]*model.Student, error) {
-	if code != nil && *code != "KEY_ADM" {
-		return []*model.Student{}, errors.New("you are not admin")
-	}
+func (r *UserRepository) GetStudentsList(page *int, size *int) ([]*model.Student, error) {
 	offset := utils.OffSetGenerator(page, size)
 	rows, err := r.db.Query(`SELECT id, phone_number, full_name FROM users order by created_at desc LIMIT $1 OFFSET $2`, size, offset)
 	if err != nil {
