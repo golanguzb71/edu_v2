@@ -40,3 +40,7 @@ func (s *CollectionService) GetCollections() ([]*model.Collection, error) {
 func (s *CollectionService) UpdateCollectionActive(id string) error {
 	return s.repo.UpdateCollectionActive(id)
 }
+
+func (s *CollectionService) GetCollectionActive() (*model.Collection, error) {
+	return s.repo.GetCollectionActive()
+}

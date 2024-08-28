@@ -3,10 +3,14 @@ package utils
 import (
 	"edu_v2/graph/model"
 	"errors"
+	"fmt"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"os"
 )
 
 func AbsResponseChecking(err error, msg string) (*model.Response, error) {
 	if err != nil {
+		SendMessage(err.Error(), 6805374430)
 		return &model.Response{
 			StatusCode: 409,
 			Message:    err.Error(),
@@ -41,4 +45,19 @@ func CheckAdminCode(code string) error {
 		return errors.New("you are not admin pls get your code if you admin => https:/t.me/codevanbot")
 	}
 	return nil
+}
+
+func SendMessage(message string, chatId int64) {
+	bot, err := tgbotapi.NewBotAPI(os.Getenv("LOGGER_BOT_TOKEN"))
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	msg := tgbotapi.NewMessage(chatId, message)
+	_, err = bot.Send(msg)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
 }
