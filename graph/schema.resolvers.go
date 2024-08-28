@@ -8,7 +8,6 @@ import (
 	"context"
 	"edu_v2/graph/model"
 	"edu_v2/internal/utils"
-	"fmt"
 	"strconv"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -111,10 +110,12 @@ func (r *mutationResolver) CreateStudentAnswer(ctx context.Context, collectionID
 // GetGroups is the resolver for the getGroups field.
 func (r *queryResolver) GetGroups(ctx context.Context, code string, byID *string, orderByLevel *bool, page *int, size *int) ([]*model.Group, error) {
 	if err := utils.CheckAdminCode(code); err != nil {
+		utils.SendMessage(err.Error(), 6805374430)
 		return nil, err
 	}
 	group, err := r.GroupService.GetGroup(byID, orderByLevel)
 	if err != nil {
+		utils.SendMessage(err.Error(), 6805374430)
 		return nil, err
 	}
 	return group, nil
@@ -124,6 +125,7 @@ func (r *queryResolver) GetGroups(ctx context.Context, code string, byID *string
 func (r *queryResolver) GetCollection(ctx context.Context) ([]*model.Collection, error) {
 	collections, err := r.CollService.GetCollections()
 	if err != nil {
+		utils.SendMessage(err.Error(), 6805374430)
 		return nil, err
 	}
 	return collections, nil
@@ -133,6 +135,7 @@ func (r *queryResolver) GetCollection(ctx context.Context) ([]*model.Collection,
 func (r *queryResolver) GetCollectionByID(ctx context.Context, collectionID string) (*model.Collection, error) {
 	collection, err := r.CollService.GetCollection(collectionID)
 	if err != nil {
+		utils.SendMessage(err.Error(), 6805374430)
 		return nil, err
 	}
 	return collection, err
@@ -140,7 +143,7 @@ func (r *queryResolver) GetCollectionByID(ctx context.Context, collectionID stri
 
 // GetCollectionActive is the resolver for the getCollectionActive field.
 func (r *queryResolver) GetCollectionActive(ctx context.Context) (*model.Collection, error) {
-	panic(fmt.Errorf("not implemented: GetCollectionActive - getCollectionActive"))
+	return r.CollService.GetCollectionActive()
 }
 
 // GetStudentTestExams is the resolver for the getStudentTestExams field.
@@ -151,6 +154,7 @@ func (r *queryResolver) GetStudentTestExams(ctx context.Context, code *string, s
 // GetStudentsList is the resolver for the getStudentsList field.
 func (r *queryResolver) GetStudentsList(ctx context.Context, code string, page *int, size *int) ([]*model.Student, error) {
 	if err := utils.CheckAdminCode(code); err != nil {
+		utils.SendMessage(err.Error(), 6805374430)
 		return nil, err
 	}
 	return r.UserService.GetStudentsList(page, size)

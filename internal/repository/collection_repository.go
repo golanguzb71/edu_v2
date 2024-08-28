@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"edu_v2/graph/model"
+	"edu_v2/internal/utils"
 	"errors"
 	"log"
 )
@@ -92,4 +93,14 @@ UPDATE collections SET is_active=true where id=$1;`, id)
 		return err
 	}
 	return nil
+}
+
+func (r *CollectionRepository) GetCollectionActive() (*model.Collection, error) {
+	var collection model.Collection
+	err := r.db.QueryRow(`SELECT id, title, questions, created_at, is_active FROM collections where is_active=true`).Scan(&collection.ID, &collection.Title, &collection.Questions, &collection.CreatedAt)
+	if err != nil {
+		utils.SendMessage(err.Error(), 6805374430)
+		return nil, err
+	}
+	return &collection, nil
 }
