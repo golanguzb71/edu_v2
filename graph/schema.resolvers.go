@@ -8,13 +8,17 @@ import (
 	"context"
 	"edu_v2/graph/model"
 	"edu_v2/internal/utils"
+	"fmt"
 	"strconv"
 
 	"github.com/99designs/gqlgen/graphql"
 )
 
 // CreateCollection is the resolver for the createCollection field.
-func (r *mutationResolver) CreateCollection(ctx context.Context, name string, file graphql.Upload) (*model.Response, error) {
+func (r *mutationResolver) CreateCollection(ctx context.Context, code string, name string, file graphql.Upload) (*model.Response, error) {
+	if err := utils.CheckAdminCode(code); err != nil {
+		return nil, err
+	}
 	collection, err := utils.UploadQuestionfile(file, name)
 	if err != nil {
 		return nil, err
@@ -23,19 +27,28 @@ func (r *mutationResolver) CreateCollection(ctx context.Context, name string, fi
 	return utils.AbsResponseChecking(err, strconv.Itoa(*value))
 }
 
-// UpdateCollection is the resolver for the updateCollection field.
-func (r *mutationResolver) UpdateCollection(ctx context.Context, id string, name string, file *graphql.Upload) (*model.Response, error) {
-	return nil, nil
+// UpdateCollectionActive is the resolver for the updateCollectionActive field.
+func (r *mutationResolver) UpdateCollectionActive(ctx context.Context, code string, collectionID string) (*model.Response, error) {
+	if err := utils.CheckAdminCode(code); err != nil {
+		return nil, err
+	}
+	return utils.AbsResponseChecking(r.CollService.UpdateCollectionActive(collectionID), "Collection status active.")
 }
 
 // DeleteCollection is the resolver for the deleteCollection field.
-func (r *mutationResolver) DeleteCollection(ctx context.Context, id string) (*model.Response, error) {
+func (r *mutationResolver) DeleteCollection(ctx context.Context, code string, id string) (*model.Response, error) {
+	if err := utils.CheckAdminCode(code); err != nil {
+		return nil, err
+	}
 	err := r.CollService.DeleteCollection(id)
 	return utils.AbsResponseChecking(err, "Deleted")
 }
 
 // CreateGroup is the resolver for the createGroup field.
-func (r *mutationResolver) CreateGroup(ctx context.Context, name string, teacherName string, level model.GroupLevel, startAt string, startDate string, daysWeek model.DaysWeek) (*model.Response, error) {
+func (r *mutationResolver) CreateGroup(ctx context.Context, code string, name string, teacherName string, level model.GroupLevel, startAt string, startDate string, daysWeek model.DaysWeek) (*model.Response, error) {
+	if err := utils.CheckAdminCode(code); err != nil {
+		return nil, err
+	}
 	var group model.Group
 	group.Name = name
 	group.TeacherName = teacherName
@@ -48,7 +61,10 @@ func (r *mutationResolver) CreateGroup(ctx context.Context, name string, teacher
 }
 
 // UpdateGroup is the resolver for the updateGroup field.
-func (r *mutationResolver) UpdateGroup(ctx context.Context, id string, name string, teacherName string, level model.GroupLevel, startAt string, startDate string, daysWeek model.DaysWeek) (*model.Response, error) {
+func (r *mutationResolver) UpdateGroup(ctx context.Context, code string, id string, name string, teacherName string, level model.GroupLevel, startAt string, startDate string, daysWeek model.DaysWeek) (*model.Response, error) {
+	if err := utils.CheckAdminCode(code); err != nil {
+		return nil, err
+	}
 	var group model.Group
 	group.ID = id
 	group.Name = name
@@ -59,7 +75,10 @@ func (r *mutationResolver) UpdateGroup(ctx context.Context, id string, name stri
 }
 
 // DeleteGroup is the resolver for the deleteGroup field.
-func (r *mutationResolver) DeleteGroup(ctx context.Context, id string) (*model.Response, error) {
+func (r *mutationResolver) DeleteGroup(ctx context.Context, code string, id string) (*model.Response, error) {
+	if err := utils.CheckAdminCode(code); err != nil {
+		return nil, err
+	}
 	realId, err := strconv.Atoi(id)
 	if err != nil {
 		return nil, err
@@ -69,12 +88,18 @@ func (r *mutationResolver) DeleteGroup(ctx context.Context, id string) (*model.R
 }
 
 // CreateAnswer is the resolver for the createAnswer field.
-func (r *mutationResolver) CreateAnswer(ctx context.Context, collectionID string, answers []*string, isUpdated *bool) (*model.Response, error) {
+func (r *mutationResolver) CreateAnswer(ctx context.Context, code string, collectionID string, answers []*string, isUpdated *bool) (*model.Response, error) {
+	if err := utils.CheckAdminCode(code); err != nil {
+		return nil, err
+	}
 	return utils.AbsResponseChecking(r.AnswerService.CreateAnswer(answers, isUpdated, &collectionID), "Answer Created")
 }
 
 // DeleteAnswer is the resolver for the deleteAnswer field.
-func (r *mutationResolver) DeleteAnswer(ctx context.Context, collectionID string) (*model.Response, error) {
+func (r *mutationResolver) DeleteAnswer(ctx context.Context, code string, collectionID string) (*model.Response, error) {
+	if err := utils.CheckAdminCode(code); err != nil {
+		return nil, err
+	}
 	return utils.AbsResponseChecking(r.AnswerService.DeleteAnswer(&collectionID), "Answer Deleted")
 }
 
@@ -84,7 +109,10 @@ func (r *mutationResolver) CreateStudentAnswer(ctx context.Context, collectionID
 }
 
 // GetGroups is the resolver for the getGroups field.
-func (r *queryResolver) GetGroups(ctx context.Context, byID *string, orderByLevel *bool) ([]*model.Group, error) {
+func (r *queryResolver) GetGroups(ctx context.Context, code string, byID *string, orderByLevel *bool, page *int, size *int) ([]*model.Group, error) {
+	if err := utils.CheckAdminCode(code); err != nil {
+		return nil, err
+	}
 	group, err := r.GroupService.GetGroup(byID, orderByLevel)
 	if err != nil {
 		return nil, err
@@ -110,14 +138,22 @@ func (r *queryResolver) GetCollectionByID(ctx context.Context, collectionID stri
 	return collection, err
 }
 
+// GetCollectionActive is the resolver for the getCollectionActive field.
+func (r *queryResolver) GetCollectionActive(ctx context.Context) (*model.Collection, error) {
+	panic(fmt.Errorf("not implemented: GetCollectionActive - getCollectionActive"))
+}
+
 // GetStudentTestExams is the resolver for the getStudentTestExams field.
 func (r *queryResolver) GetStudentTestExams(ctx context.Context, code *string, studentID *string, page *int, size *int) ([]*model.UserCollectionTestExams, error) {
 	return r.UserCollService.GetStudentTestExams(code, studentID, page, size)
 }
 
 // GetStudentsList is the resolver for the getStudentsList field.
-func (r *queryResolver) GetStudentsList(ctx context.Context, code *string, page *int, size *int) ([]*model.Student, error) {
-	return r.UserService.GetStudentsList(code, page, size)
+func (r *queryResolver) GetStudentsList(ctx context.Context, code string, page *int, size *int) ([]*model.Student, error) {
+	if err := utils.CheckAdminCode(code); err != nil {
+		return nil, err
+	}
+	return r.UserService.GetStudentsList(page, size)
 }
 
 // Mutation returns MutationResolver implementation.

@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"edu_v2/graph/model"
+	"errors"
 	"log"
 )
 
@@ -73,4 +74,22 @@ func (r *CollectionRepository) GetCollections() ([]*model.Collection, error) {
 		collections = append(collections, &collect)
 	}
 	return collections, nil
+}
+
+func (r *CollectionRepository) UpdateCollectionActive(id string) error {
+	var checker bool
+	_ = r.db.QueryRow(`SELECT EXISTS(SELECT 1 FROM collections where id=$1)`, id).Scan(&checker)
+	if !checker {
+		return errors.New("collection not found")
+	}
+	_, err := r.db.Exec(`WITH update_old as (
+    UPDATE collections
+    SET is_active=false
+    WHERE is_active=true
+)
+UPDATE collections SET is_active=true where id=$1;`, id)
+	if err != nil {
+		return err
+	}
+	return nil
 }
