@@ -19,6 +19,7 @@ type Collection struct {
 	Title     string `json:"title"`
 	Questions string `json:"questions"`
 	CreatedAt string `json:"createdAt"`
+	IsActive  bool   `json:"isActive"`
 }
 
 type Group struct {

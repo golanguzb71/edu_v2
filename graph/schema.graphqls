@@ -37,6 +37,7 @@ type Collection {
     title :String!
     questions: String!
     createdAt:String!
+    isActive:Boolean!
 }
 
 type AnswerField{

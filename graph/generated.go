@@ -56,6 +56,7 @@ type ComplexityRoot struct {
 	Collection struct {
 		CreatedAt func(childComplexity int) int
 		ID        func(childComplexity int) int
+		IsActive  func(childComplexity int) int
 		Questions func(childComplexity int) int
 		Title     func(childComplexity int) int
 	}
@@ -186,6 +187,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Collection.ID(childComplexity), true
+
+	case "Collection.isActive":
+		if e.complexity.Collection.IsActive == nil {
+			break
+		}
+
+		return e.complexity.Collection.IsActive(childComplexity), true
 
 	case "Collection.questions":
 		if e.complexity.Collection.Questions == nil {
@@ -1474,6 +1482,50 @@ func (ec *executionContext) fieldContext_Collection_createdAt(_ context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _Collection_isActive(ctx context.Context, field graphql.CollectedField, obj *model.Collection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Collection_isActive(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsActive, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Collection_isActive(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Collection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Group_id(ctx context.Context, field graphql.CollectedField, obj *model.Group) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Group_id(ctx, field)
 	if err != nil {
@@ -2492,6 +2544,8 @@ func (ec *executionContext) fieldContext_Query_getCollection(_ context.Context, 
 				return ec.fieldContext_Collection_questions(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Collection_createdAt(ctx, field)
+			case "isActive":
+				return ec.fieldContext_Collection_isActive(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Collection", field.Name)
 		},
@@ -2546,6 +2600,8 @@ func (ec *executionContext) fieldContext_Query_getCollectionById(ctx context.Con
 				return ec.fieldContext_Collection_questions(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Collection_createdAt(ctx, field)
+			case "isActive":
+				return ec.fieldContext_Collection_isActive(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Collection", field.Name)
 		},
@@ -2611,6 +2667,8 @@ func (ec *executionContext) fieldContext_Query_getCollectionActive(_ context.Con
 				return ec.fieldContext_Collection_questions(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Collection_createdAt(ctx, field)
+			case "isActive":
+				return ec.fieldContext_Collection_isActive(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Collection", field.Name)
 		},
@@ -5229,6 +5287,11 @@ func (ec *executionContext) _Collection(ctx context.Context, sel ast.SelectionSe
 			}
 		case "createdAt":
 			out.Values[i] = ec._Collection_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isActive":
+			out.Values[i] = ec._Collection_isActive(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

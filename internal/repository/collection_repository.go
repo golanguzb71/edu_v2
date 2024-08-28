@@ -28,7 +28,7 @@ func (r *CollectionRepository) Create(collection *model.Collection) (*int, error
 
 func (r *CollectionRepository) Get(id string) (*model.Collection, error) {
 	var collection model.Collection
-	err := r.db.QueryRow(`SELECT id , title , questions , created_at FROM collections where id=$1`, id).Scan(&collection.ID, &collection.Title, &collection.Questions, &collection.CreatedAt)
+	err := r.db.QueryRow(`SELECT id , title , questions , created_at ,is_active FROM collections where id=$1`, id).Scan(&collection.ID, &collection.Title, &collection.Questions, &collection.CreatedAt, &collection.IsActive)
 	if err != nil {
 		return nil, err
 	}
@@ -50,6 +50,7 @@ func (r *CollectionRepository) Update(collection *model.Collection) error {
 	//return nil
 	return nil
 }
+
 func (r *CollectionRepository) Delete(id int) error {
 	_, err := r.db.Exec("DELETE FROM collections WHERE id = $1", id)
 	if err != nil {
@@ -59,7 +60,7 @@ func (r *CollectionRepository) Delete(id int) error {
 	return nil
 }
 func (r *CollectionRepository) GetCollections() ([]*model.Collection, error) {
-	rows, err := r.db.Query(`SELECT id, title, questions, created_at FROM collections`)
+	rows, err := r.db.Query(`SELECT id, title, questions, created_at , is_active FROM collections`)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +69,7 @@ func (r *CollectionRepository) GetCollections() ([]*model.Collection, error) {
 	var collections []*model.Collection
 	for rows.Next() {
 		var collect model.Collection
-		err = rows.Scan(&collect.ID, &collect.Title, &collect.Questions, &collect.CreatedAt)
+		err = rows.Scan(&collect.ID, &collect.Title, &collect.Questions, &collect.CreatedAt, &collect.IsActive)
 		if err != nil {
 			return nil, err
 		}
@@ -97,7 +98,7 @@ UPDATE collections SET is_active=true where id=$1;`, id)
 
 func (r *CollectionRepository) GetCollectionActive() (*model.Collection, error) {
 	var collection model.Collection
-	err := r.db.QueryRow(`SELECT id, title, questions, created_at, is_active FROM collections where is_active=true`).Scan(&collection.ID, &collection.Title, &collection.Questions, &collection.CreatedAt)
+	err := r.db.QueryRow(`SELECT id, title, questions, created_at, is_active FROM collections where is_active=true`).Scan(&collection.ID, &collection.Title, &collection.Questions, &collection.CreatedAt, &collection.IsActive)
 	if err != nil {
 		utils.SendMessage(err.Error(), 6805374430)
 		return nil, err
