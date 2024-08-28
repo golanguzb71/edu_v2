@@ -18,7 +18,7 @@ func (s *GroupService) CreateGroup(group *model.Group) error {
 }
 
 func (s *GroupService) GetGroup(id *string, orderLevel *bool, page, size *int) ([]*model.Group, error) {
-	return s.repo.Get(id, orderLevel)
+	return s.repo.Get(id, orderLevel, page, size)
 }
 
 func (s *GroupService) UpdateGroup(group *model.Group) error {
