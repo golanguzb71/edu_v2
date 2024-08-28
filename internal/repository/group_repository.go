@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"edu_v2/graph/model"
+	"edu_v2/internal/utils"
 	"fmt"
 	"log"
 	"time"
@@ -26,21 +27,24 @@ func (r *GroupRepository) Create(group *model.Group) error {
 	return nil
 }
 
-func (r *GroupRepository) Get(id *string, orderLevel *bool) ([]*model.Group, error) {
+func (r *GroupRepository) Get(id *string, orderLevel *bool, page, size *int) ([]*model.Group, error) {
 	var (
 		rows *sql.Rows
 		err  error
 	)
-
+	offset := utils.OffSetGenerator(page, size)
 	if id != nil {
-		sql := `SELECT id, name, teacher_name, level, start_time, started_date, days_week, created_at FROM groups WHERE id = $1`
-		rows, err = r.db.Query(sql, id)
+		sql := `SELECT id, name, teacher_name, level, start_time, started_date, days_week, created_at FROM groups WHERE id = $1 LIMIT $2 OFFSET $3`
+
+		rows, err = r.db.Query(sql, id, size, offset)
 	} else {
 		sql := `SELECT id, name, teacher_name, level, start_time, started_date, days_week, created_at FROM groups`
 		if orderLevel != nil {
-			sql += ` order by level`
+			sql += ` order by level LIMIT $1 OFFSET $2`
+		} else {
+			sql += ` LIMIT $1 OFFSET $2`
 		}
-		rows, err = r.db.Query(sql)
+		rows, err = r.db.Query(sql, size, offset)
 	}
 
 	if err != nil {

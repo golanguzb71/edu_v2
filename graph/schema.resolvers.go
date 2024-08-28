@@ -113,7 +113,7 @@ func (r *queryResolver) GetGroups(ctx context.Context, code string, byID *string
 		utils.SendMessage(err.Error(), 6805374430)
 		return nil, err
 	}
-	group, err := r.GroupService.GetGroup(byID, orderByLevel)
+	group, err := r.GroupService.GetGroup(byID, orderByLevel, page, size)
 	if err != nil {
 		utils.SendMessage(err.Error(), 6805374430)
 		return nil, err
