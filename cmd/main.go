@@ -8,7 +8,6 @@ import (
 	"edu_v2/internal/service"
 	"errors"
 	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gorilla/handlers"
 	"github.com/joho/godotenv"
 	"log"
@@ -54,8 +53,6 @@ func loadEnv() {
 
 func startServer(port string, groupService *service.GroupService, collService *service.CollectionService, answerService *service.AnswerService, userCollService *service.UserCollectionService, userService *service.UserService) *http.Server {
 	mux := http.NewServeMux()
-	mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
-
 	mux.Handle("/query", handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{
 		Resolvers: &graph.Resolver{
 			GroupService:    groupService,

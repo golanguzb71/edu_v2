@@ -28,7 +28,6 @@ func (r *UserCollectionRepository) GetStudentTestExams(code *string, studentId *
 		if errors.Is(err, sql.ErrNoRows) {
 			totalRecords = 0
 		} else {
-			utils.SendMessage(err.Error(), 6805374430)
 			return nil, err
 		}
 	}
@@ -46,7 +45,6 @@ func (r *UserCollectionRepository) GetStudentTestExams(code *string, studentId *
 		defer rows.Close()
 		items, err := studentTestExamsForStudent(rows, r)
 		if err != nil {
-			utils.SendMessage(err.Error(), 6805374430)
 			return nil, err
 		}
 
@@ -70,7 +68,6 @@ func (r *UserCollectionRepository) GetStudentTestExams(code *string, studentId *
 	defer rows.Close()
 	uCTL, err := studentTestExamsForStudent(rows, r)
 	if err != nil {
-		utils.SendMessage(err.Error(), 6805374430)
 		return nil, err
 	}
 

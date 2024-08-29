@@ -39,7 +39,6 @@ func (r *GroupRepository) Get(id *string, orderLevel *bool, page, size *int) (*m
 		if errors.Is(err, sql.ErrNoRows) {
 			totalRecords = 0
 		} else {
-			utils.SendMessage(err.Error(), 6805374430)
 			return nil, err
 		}
 	}
@@ -93,7 +92,6 @@ func (r *GroupRepository) Get(id *string, orderLevel *bool, page, size *int) (*m
 		groups = append(groups, group)
 	}
 	if err := rows.Err(); err != nil {
-		utils.SendMessage(err.Error(), 6805374430)
 		return nil, fmt.Errorf("rows error: %w", err)
 	}
 
