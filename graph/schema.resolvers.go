@@ -142,7 +142,12 @@ func (r *queryResolver) GetCollectionByID(ctx context.Context, collectionID stri
 
 // GetCollectionActive is the resolver for the getCollectionActive field.
 func (r *queryResolver) GetCollectionActive(ctx context.Context) (*model.Collection, error) {
-	return r.CollService.GetCollectionActive()
+	active, err := r.CollService.GetCollectionActive()
+	if err != nil {
+		utils.ErrorLogger(err)
+		return nil, err
+	}
+	return active, nil
 }
 
 // GetStudentTestExams is the resolver for the getStudentTestExams field.
