@@ -8,7 +8,6 @@ import (
 	"context"
 	"edu_v2/graph/model"
 	"edu_v2/internal/utils"
-	"fmt"
 	"strconv"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -111,7 +110,6 @@ func (r *mutationResolver) CreateStudentAnswer(ctx context.Context, collectionID
 // GetGroups is the resolver for the getGroups field.
 func (r *queryResolver) GetGroups(ctx context.Context, code string, byID *string, orderByLevel *bool, page *int, size *int) (*model.PaginatedResult, error) {
 	if err := utils.CheckAdminCode(code); err != nil {
-		utils.SendMessage(err.Error(), 6805374430)
 		return nil, err
 	}
 	group, err := r.GroupService.GetGroup(byID, orderByLevel, page, size)
@@ -155,7 +153,6 @@ func (r *queryResolver) GetStudentTestExams(ctx context.Context, code *string, s
 // GetStudentsList is the resolver for the getStudentsList field.
 func (r *queryResolver) GetStudentsList(ctx context.Context, code string, page *int, size *int) (*model.PaginatedResult, error) {
 	if err := utils.CheckAdminCode(code); err != nil {
-		utils.SendMessage(err.Error(), 6805374430)
 		return nil, err
 	}
 	return r.UserService.GetStudentsList(page, size)
@@ -163,7 +160,7 @@ func (r *queryResolver) GetStudentsList(ctx context.Context, code string, page *
 
 // SearchStudent is the resolver for the searchStudent field.
 func (r *queryResolver) SearchStudent(ctx context.Context, value string) (*model.PaginatedResult, error) {
-	panic(fmt.Errorf("not implemented: SearchStudent - searchStudent"))
+	return nil, nil
 }
 
 // Mutation returns MutationResolver implementation.
