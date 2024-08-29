@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"edu_v2/graph/model"
 	"edu_v2/internal/utils"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -27,11 +28,22 @@ func (r *GroupRepository) Create(group *model.Group) error {
 	return nil
 }
 
-func (r *GroupRepository) Get(id *string, orderLevel *bool, page, size *int) ([]*model.Group, error) {
+func (r *GroupRepository) Get(id *string, orderLevel *bool, page, size *int) (*model.PaginatedResult, error) {
 	var (
 		rows *sql.Rows
 		err  error
 	)
+	var totalRecords int
+	err = r.db.QueryRow(`SELECT COUNT(*) FROM groups`).Scan(&totalRecords)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			totalRecords = 0
+		} else {
+			utils.SendMessage(err.Error(), 6805374430)
+			return nil, err
+		}
+	}
+	totalPages := utils.CalculateTotalPages(totalRecords, size)
 	offset := utils.OffSetGenerator(page, size)
 	if id != nil {
 		sql := `SELECT id, name, teacher_name, level, start_time, started_date, days_week, created_at FROM groups WHERE id = $1 LIMIT $2 OFFSET $3`
@@ -46,14 +58,11 @@ func (r *GroupRepository) Get(id *string, orderLevel *bool, page, size *int) ([]
 		}
 		rows, err = r.db.Query(sql, size, offset)
 	}
-
 	if err != nil {
 		return nil, fmt.Errorf("query error: %w", err)
 	}
 	defer rows.Close()
-
-	var groups []*model.Group
-
+	var groups []model.PaginatedItems
 	for rows.Next() {
 		var (
 			id          int
@@ -83,12 +92,16 @@ func (r *GroupRepository) Get(id *string, orderLevel *bool, page, size *int) ([]
 
 		groups = append(groups, group)
 	}
-
 	if err := rows.Err(); err != nil {
+		utils.SendMessage(err.Error(), 6805374430)
 		return nil, fmt.Errorf("rows error: %w", err)
 	}
 
-	return groups, nil
+	return &model.PaginatedResult{
+		Items:     groups,
+		TotalPage: &totalPages,
+	}, nil
+
 }
 
 func (r *GroupRepository) Update(group *model.Group) error {

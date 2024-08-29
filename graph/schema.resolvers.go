@@ -8,6 +8,7 @@ import (
 	"context"
 	"edu_v2/graph/model"
 	"edu_v2/internal/utils"
+	"fmt"
 	"strconv"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -108,7 +109,7 @@ func (r *mutationResolver) CreateStudentAnswer(ctx context.Context, collectionID
 }
 
 // GetGroups is the resolver for the getGroups field.
-func (r *queryResolver) GetGroups(ctx context.Context, code string, byID *string, orderByLevel *bool, page *int, size *int) ([]*model.Group, error) {
+func (r *queryResolver) GetGroups(ctx context.Context, code string, byID *string, orderByLevel *bool, page *int, size *int) (*model.PaginatedResult, error) {
 	if err := utils.CheckAdminCode(code); err != nil {
 		utils.SendMessage(err.Error(), 6805374430)
 		return nil, err
@@ -147,17 +148,22 @@ func (r *queryResolver) GetCollectionActive(ctx context.Context) (*model.Collect
 }
 
 // GetStudentTestExams is the resolver for the getStudentTestExams field.
-func (r *queryResolver) GetStudentTestExams(ctx context.Context, code *string, studentID *string, page *int, size *int) ([]*model.UserCollectionTestExams, error) {
+func (r *queryResolver) GetStudentTestExams(ctx context.Context, code *string, studentID *string, page *int, size *int) (*model.PaginatedResult, error) {
 	return r.UserCollService.GetStudentTestExams(code, studentID, page, size)
 }
 
 // GetStudentsList is the resolver for the getStudentsList field.
-func (r *queryResolver) GetStudentsList(ctx context.Context, code string, page *int, size *int) ([]*model.Student, error) {
+func (r *queryResolver) GetStudentsList(ctx context.Context, code string, page *int, size *int) (*model.PaginatedResult, error) {
 	if err := utils.CheckAdminCode(code); err != nil {
 		utils.SendMessage(err.Error(), 6805374430)
 		return nil, err
 	}
 	return r.UserService.GetStudentsList(page, size)
+}
+
+// SearchStudent is the resolver for the searchStudent field.
+func (r *queryResolver) SearchStudent(ctx context.Context, value string) (*model.PaginatedResult, error) {
+	panic(fmt.Errorf("not implemented: SearchStudent - searchStudent"))
 }
 
 // Mutation returns MutationResolver implementation.

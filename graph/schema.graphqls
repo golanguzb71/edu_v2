@@ -1,3 +1,5 @@
+union PaginatedItems = Group | UserCollectionTestExams | Student
+
 scalar Upload
 
 type Group {
@@ -55,6 +57,11 @@ type UserCollectionTestExams {
     createdAt:String!
 }
 
+type PaginatedResult {
+    items: [PaginatedItems]
+    totalPage: Int
+}
+
 type Student{
     fullName:String!
     phoneNumber:String!
@@ -62,12 +69,13 @@ type Student{
 }
 
 type Query {
-    getGroups(code:String!, byId: ID, orderByLevel: Boolean , page:Int , size:Int): [Group!]
-    getCollection:[Collection!]!
+    getGroups(code:String!, byId: ID, orderByLevel: Boolean , page:Int , size:Int): PaginatedResult
+    getCollection:[Collection]!
     getCollectionById(collectionId:ID!):Collection!
     getCollectionActive:Collection!
-    getStudentTestExams(code:String, studentId:ID , page:Int , size:Int):[UserCollectionTestExams!]!
-    getStudentsList(code:String!,page:Int , size:Int):[Student]
+    getStudentTestExams(code:String, studentId:ID , page:Int , size:Int):PaginatedResult
+    getStudentsList(code:String!,page:Int , size:Int):PaginatedResult
+    searchStudent(value:String!):PaginatedResult
 }
 
 
