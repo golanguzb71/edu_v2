@@ -96,7 +96,7 @@ type ComplexityRoot struct {
 		GetGroups           func(childComplexity int, code string, byID *string, orderByLevel *bool, page *int, size *int) int
 		GetStudentTestExams func(childComplexity int, code *string, studentID *string, page *int, size *int) int
 		GetStudentsList     func(childComplexity int, code string, page *int, size *int) int
-		SearchStudent       func(childComplexity int, value string) int
+		SearchStudent       func(childComplexity int, value string, page *int, size *int) int
 	}
 
 	Response struct {
@@ -138,7 +138,7 @@ type QueryResolver interface {
 	GetCollectionActive(ctx context.Context) (*model.Collection, error)
 	GetStudentTestExams(ctx context.Context, code *string, studentID *string, page *int, size *int) (*model.PaginatedResult, error)
 	GetStudentsList(ctx context.Context, code string, page *int, size *int) (*model.PaginatedResult, error)
-	SearchStudent(ctx context.Context, value string) (*model.PaginatedResult, error)
+	SearchStudent(ctx context.Context, value string, page *int, size *int) (*model.PaginatedResult, error)
 }
 
 type executableSchema struct {
@@ -466,7 +466,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.SearchStudent(childComplexity, args["value"].(string)), true
+		return e.complexity.Query.SearchStudent(childComplexity, args["value"].(string), args["page"].(*int), args["size"].(*int)), true
 
 	case "Response.message":
 		if e.complexity.Response.Message == nil {
@@ -1187,6 +1187,24 @@ func (ec *executionContext) field_Query_searchStudent_args(ctx context.Context, 
 		}
 	}
 	args["value"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["page"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["page"] = arg1
+	var arg2 *int
+	if tmp, ok := rawArgs["size"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("size"))
+		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["size"] = arg2
 	return args, nil
 }
 
@@ -2924,7 +2942,7 @@ func (ec *executionContext) _Query_searchStudent(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().SearchStudent(rctx, fc.Args["value"].(string))
+		return ec.resolvers.Query().SearchStudent(rctx, fc.Args["value"].(string), fc.Args["page"].(*int), fc.Args["size"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

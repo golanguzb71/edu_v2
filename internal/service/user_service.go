@@ -16,3 +16,7 @@ func NewUserService(userRepo *repository.UserRepository) *UserService {
 func (s *UserService) GetStudentsList(page *int, size *int) (*model.PaginatedResult, error) {
 	return s.userRepo.GetStudentsList(page, size)
 }
+
+func (s *UserService) SearchStudent(value string, page, size *int) (*model.PaginatedResult, error) {
+	return s.userRepo.SearchStudent(value, page, size)
+}
