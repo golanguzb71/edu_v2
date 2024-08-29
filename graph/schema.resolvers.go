@@ -114,7 +114,7 @@ func (r *queryResolver) GetGroups(ctx context.Context, code string, byID *string
 	}
 	group, err := r.GroupService.GetGroup(byID, orderByLevel, page, size)
 	if err != nil {
-		utils.SendMessage(err.Error(), 6805374430)
+		utils.ErrorLogger(err)
 		return nil, err
 	}
 	return group, nil
@@ -124,7 +124,7 @@ func (r *queryResolver) GetGroups(ctx context.Context, code string, byID *string
 func (r *queryResolver) GetCollection(ctx context.Context) ([]*model.Collection, error) {
 	collections, err := r.CollService.GetCollections()
 	if err != nil {
-		utils.SendMessage(err.Error(), 6805374430)
+		utils.ErrorLogger(err)
 		return nil, err
 	}
 	return collections, nil
@@ -134,7 +134,7 @@ func (r *queryResolver) GetCollection(ctx context.Context) ([]*model.Collection,
 func (r *queryResolver) GetCollectionByID(ctx context.Context, collectionID string) (*model.Collection, error) {
 	collection, err := r.CollService.GetCollection(collectionID)
 	if err != nil {
-		utils.SendMessage(err.Error(), 6805374430)
+		utils.ErrorLogger(err)
 		return nil, err
 	}
 	return collection, err
@@ -147,7 +147,12 @@ func (r *queryResolver) GetCollectionActive(ctx context.Context) (*model.Collect
 
 // GetStudentTestExams is the resolver for the getStudentTestExams field.
 func (r *queryResolver) GetStudentTestExams(ctx context.Context, code *string, studentID *string, page *int, size *int) (*model.PaginatedResult, error) {
-	return r.UserCollService.GetStudentTestExams(code, studentID, page, size)
+	exams, err := r.UserCollService.GetStudentTestExams(code, studentID, page, size)
+	if err != nil {
+		utils.ErrorLogger(err)
+		return nil, err
+	}
+	return exams, nil
 }
 
 // GetStudentsList is the resolver for the getStudentsList field.
@@ -155,12 +160,22 @@ func (r *queryResolver) GetStudentsList(ctx context.Context, code string, page *
 	if err := utils.CheckAdminCode(code); err != nil {
 		return nil, err
 	}
-	return r.UserService.GetStudentsList(page, size)
+	list, err := r.UserService.GetStudentsList(page, size)
+	if err != nil {
+		utils.ErrorLogger(err)
+		return nil, err
+	}
+	return list, nil
 }
 
 // SearchStudent is the resolver for the searchStudent field.
 func (r *queryResolver) SearchStudent(ctx context.Context, value string, page *int, size *int) (*model.PaginatedResult, error) {
-	return r.UserService.SearchStudent(value, page, size)
+	student, err := r.UserService.SearchStudent(value, page, size)
+	if err != nil {
+		utils.ErrorLogger(err)
+		return nil, err
+	}
+	return student, nil
 }
 
 // Mutation returns MutationResolver implementation.

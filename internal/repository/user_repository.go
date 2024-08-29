@@ -25,7 +25,6 @@ func (r *UserRepository) GetStudentsList(page *int, size *int) (*model.Paginated
 		if errors.Is(err, sql.ErrNoRows) {
 			totalRecords = 0
 		} else {
-			utils.SendMessage(err.Error(), 6805374430)
 			return nil, err
 		}
 	}
@@ -64,16 +63,14 @@ func (r *UserRepository) SearchStudent(value string, page, size *int) (*model.Pa
 	var args []interface{}
 
 	if value[0] == '+' {
-		// Phone number search with wildcards
+
 		query = `SELECT id, phone_number, full_name FROM users WHERE phone_number LIKE $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
 		args = []interface{}{"%" + value[1:] + "%", *size, offset}
 	} else {
-		// Full name search with wildcards
+
 		query = `SELECT id, phone_number, full_name FROM users WHERE full_name LIKE $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
 		args = []interface{}{"%" + value + "%", *size, offset}
 	}
-
-	// Count query for total records
 	countQuery := `SELECT COUNT(*) FROM users WHERE phone_number LIKE $1 OR full_name LIKE $2`
 	var totalRecords int
 	err := r.db.QueryRow(countQuery, "%"+value+"%", "%"+value+"%").Scan(&totalRecords)

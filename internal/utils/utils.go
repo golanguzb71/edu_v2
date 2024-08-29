@@ -12,27 +12,12 @@ import (
 
 func AbsResponseChecking(err error, msg string) (*model.Response, error) {
 	if err != nil {
-		pc, fn, line, _ := runtime.Caller(1)
-		detailedError := fmt.Sprintf("[ERROR] %s\nOccurred at %s:%d in %s\nTime: %s",
-			err.Error(),
-			fn,
-			line,
-			runtime.FuncForPC(pc).Name(),
-			time.Now().Format(time.RFC3339),
-		)
-
-		fmt.Println(detailedError)
-
-		SendMessage(detailedError, 6805374430)
-
+		ErrorLogger(err)
 		return &model.Response{
 			StatusCode: 409,
 			Message:    err.Error(),
 		}, nil
 	}
-
-	successMessage := fmt.Sprintf("[INFO] %s\nTime: %s", msg, time.Now().Format(time.RFC3339))
-	fmt.Println(successMessage)
 
 	return &model.Response{
 		StatusCode: 200,
@@ -60,20 +45,23 @@ func OffSetGenerator(page, size *int) int {
 
 func CheckAdminCode(code string) error {
 	if code != "KEY_ADM" {
-		pc, fn, line, _ := runtime.Caller(1)
-		detailedError := fmt.Sprintf("[ERROR] %s\nOccurred at %s:%d in %s\nTime: %s",
-			errors.New("unauthorized attempt"),
-			fn,
-			line,
-			runtime.FuncForPC(pc).Name(),
-			time.Now().Format(time.RFC3339),
-		)
-		SendMessage(detailedError, 6805374430)
-
-		return errors.New("unauthorized access: you are not an admin, please obtain the correct code")
+		errTxt := "\"unauthorized access: you are not an admin, please obtain the correct code\""
+		ErrorLogger(errors.New(errTxt))
+		return errors.New(errTxt)
 	}
 
 	return nil
+}
+func ErrorLogger(err error) {
+	pc, fn, line, _ := runtime.Caller(1)
+	detailedError := fmt.Sprintf("[ERROR] %s\nOccurred at %s:%d in %s\nTime: %s",
+		err,
+		fn,
+		line,
+		runtime.FuncForPC(pc).Name(),
+		time.Now().Format(time.RFC3339),
+	)
+	SendMessage(detailedError, 6805374430)
 }
 
 func SendMessage(message string, chatId int64) {
