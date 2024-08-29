@@ -121,35 +121,31 @@ func studentTestExamsForStudent(rows *sql.Rows, r *UserCollectionRepository) ([]
 }
 
 func processAnswers(studentAnswers, trueAnswers []string) (trueCount, falseCount int, answerFields []*model.AnswerField) {
-	maxLength := len(trueAnswers)
-	if len(studentAnswers) > maxLength {
-		maxLength = len(studentAnswers)
-	}
 
-	for i := 0; i < maxLength; i++ {
+	for i := 0; i < len(trueAnswers); i++ {
 		var isTrue bool
 		var studentAnswer, trueAnswer string
 
-		if i < len(trueAnswers) {
-			trueAnswer = trueAnswers[i]
-		}
 		if i < len(studentAnswers) {
 			studentAnswer = studentAnswers[i]
 		}
+		if i < len(trueAnswers) {
+			trueAnswer = trueAnswers[i]
+		}
 
 		if i < len(trueAnswers) {
-			normalizedTrueAnswer := strings.ToLower(strings.TrimSpace(trueAnswer))
-			if i < len(studentAnswers) {
-				normalizedStudentAnswer := strings.ToLower(strings.TrimSpace(studentAnswer))
-				if normalizedTrueAnswer == normalizedStudentAnswer {
+			normalizedTrueAnswers := normalizeAnswerOptions(trueAnswer)
+			normalizedStudentAnswer := normalizeAnswer(studentAnswer)
+
+			isTrue = false
+			for _, option := range normalizedTrueAnswers {
+				if option == normalizedStudentAnswer {
 					isTrue = true
 					trueCount++
-				} else {
-					isTrue = false
-					falseCount++
+					break
 				}
-			} else {
-				isTrue = false
+			}
+			if !isTrue {
 				falseCount++
 			}
 
@@ -160,15 +156,36 @@ func processAnswers(studentAnswers, trueAnswers []string) (trueCount, falseCount
 			})
 		} else {
 			answerFields = append(answerFields, &model.AnswerField{
-				StudentAnswer: nil,
-				TrueAnswer:    trueAnswer,
+				StudentAnswer: &studentAnswer,
+				TrueAnswer:    "",
 				IsTrue:        new(bool),
 			})
 			falseCount++
 		}
 	}
 
+	for i := len(trueAnswers); i < len(studentAnswers); i++ {
+		answerFields = append(answerFields, &model.AnswerField{
+			StudentAnswer: &studentAnswers[i],
+			TrueAnswer:    "",
+			IsTrue:        new(bool),
+		})
+		falseCount++
+	}
+
 	return trueCount, falseCount, answerFields
+}
+
+func normalizeAnswerOptions(trueAnswer string) []string {
+	options := strings.Split(trueAnswer, "/")
+	for i := range options {
+		options[i] = strings.ToLower(strings.TrimSpace(options[i]))
+	}
+	return options
+}
+
+func normalizeAnswer(answer string) string {
+	return strings.ToLower(strings.TrimSpace(answer))
 }
 
 func determineLevel(trueCount, totalQuestions int) string {
