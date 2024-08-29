@@ -13,6 +13,6 @@ func NewUserCollectionUserService(UCR *repository.UserCollectionRepository) *Use
 	return &UserCollectionService{userCollectionRepo: UCR}
 }
 
-func (s *UserCollectionService) GetStudentTestExams(code *string, studentId *string, page *int, size *int) ([]*model.UserCollectionTestExams, error) {
+func (s *UserCollectionService) GetStudentTestExams(code *string, studentId *string, page *int, size *int) (*model.PaginatedResult, error) {
 	return s.userCollectionRepo.GetStudentTestExams(code, studentId, page, size)
 }

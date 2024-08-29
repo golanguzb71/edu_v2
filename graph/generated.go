@@ -84,6 +84,11 @@ type ComplexityRoot struct {
 		UpdateGroup            func(childComplexity int, code string, id string, name string, teacherName string, level model.GroupLevel, startAt string, startDate string, daysWeek model.DaysWeek) int
 	}
 
+	PaginatedResult struct {
+		Items     func(childComplexity int) int
+		TotalPage func(childComplexity int) int
+	}
+
 	Query struct {
 		GetCollection       func(childComplexity int) int
 		GetCollectionActive func(childComplexity int) int
@@ -91,6 +96,7 @@ type ComplexityRoot struct {
 		GetGroups           func(childComplexity int, code string, byID *string, orderByLevel *bool, page *int, size *int) int
 		GetStudentTestExams func(childComplexity int, code *string, studentID *string, page *int, size *int) int
 		GetStudentsList     func(childComplexity int, code string, page *int, size *int) int
+		SearchStudent       func(childComplexity int, value string) int
 	}
 
 	Response struct {
@@ -126,12 +132,13 @@ type MutationResolver interface {
 	CreateStudentAnswer(ctx context.Context, collectionID string, answers []*string, code string) (*model.Response, error)
 }
 type QueryResolver interface {
-	GetGroups(ctx context.Context, code string, byID *string, orderByLevel *bool, page *int, size *int) ([]*model.Group, error)
+	GetGroups(ctx context.Context, code string, byID *string, orderByLevel *bool, page *int, size *int) (*model.PaginatedResult, error)
 	GetCollection(ctx context.Context) ([]*model.Collection, error)
 	GetCollectionByID(ctx context.Context, collectionID string) (*model.Collection, error)
 	GetCollectionActive(ctx context.Context) (*model.Collection, error)
-	GetStudentTestExams(ctx context.Context, code *string, studentID *string, page *int, size *int) ([]*model.UserCollectionTestExams, error)
-	GetStudentsList(ctx context.Context, code string, page *int, size *int) ([]*model.Student, error)
+	GetStudentTestExams(ctx context.Context, code *string, studentID *string, page *int, size *int) (*model.PaginatedResult, error)
+	GetStudentsList(ctx context.Context, code string, page *int, size *int) (*model.PaginatedResult, error)
+	SearchStudent(ctx context.Context, value string) (*model.PaginatedResult, error)
 }
 
 type executableSchema struct {
@@ -373,6 +380,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateGroup(childComplexity, args["code"].(string), args["id"].(string), args["name"].(string), args["teacherName"].(string), args["level"].(model.GroupLevel), args["startAt"].(string), args["startDate"].(string), args["daysWeek"].(model.DaysWeek)), true
 
+	case "PaginatedResult.items":
+		if e.complexity.PaginatedResult.Items == nil {
+			break
+		}
+
+		return e.complexity.PaginatedResult.Items(childComplexity), true
+
+	case "PaginatedResult.totalPage":
+		if e.complexity.PaginatedResult.TotalPage == nil {
+			break
+		}
+
+		return e.complexity.PaginatedResult.TotalPage(childComplexity), true
+
 	case "Query.getCollection":
 		if e.complexity.Query.GetCollection == nil {
 			break
@@ -434,6 +455,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetStudentsList(childComplexity, args["code"].(string), args["page"].(*int), args["size"].(*int)), true
+
+	case "Query.searchStudent":
+		if e.complexity.Query.SearchStudent == nil {
+			break
+		}
+
+		args, err := ec.field_Query_searchStudent_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SearchStudent(childComplexity, args["value"].(string)), true
 
 	case "Response.message":
 		if e.complexity.Response.Message == nil {
@@ -1139,6 +1172,21 @@ func (ec *executionContext) field_Query_getStudentsList_args(ctx context.Context
 		}
 	}
 	args["size"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_searchStudent_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["value"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["value"] = arg0
 	return args, nil
 }
 
@@ -2427,6 +2475,88 @@ func (ec *executionContext) fieldContext_Mutation_createStudentAnswer(ctx contex
 	return fc, nil
 }
 
+func (ec *executionContext) _PaginatedResult_items(ctx context.Context, field graphql.CollectedField, obj *model.PaginatedResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PaginatedResult_items(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Items, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]model.PaginatedItems)
+	fc.Result = res
+	return ec.marshalOPaginatedItems2ᚕedu_v2ᚋgraphᚋmodelᚐPaginatedItems(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PaginatedResult_items(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PaginatedResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type PaginatedItems does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PaginatedResult_totalPage(ctx context.Context, field graphql.CollectedField, obj *model.PaginatedResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PaginatedResult_totalPage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalPage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PaginatedResult_totalPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PaginatedResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_getGroups(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_getGroups(ctx, field)
 	if err != nil {
@@ -2450,9 +2580,9 @@ func (ec *executionContext) _Query_getGroups(ctx context.Context, field graphql.
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Group)
+	res := resTmp.(*model.PaginatedResult)
 	fc.Result = res
-	return ec.marshalOGroup2ᚕᚖedu_v2ᚋgraphᚋmodelᚐGroupᚄ(ctx, field.Selections, res)
+	return ec.marshalOPaginatedResult2ᚖedu_v2ᚋgraphᚋmodelᚐPaginatedResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getGroups(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2463,24 +2593,12 @@ func (ec *executionContext) fieldContext_Query_getGroups(ctx context.Context, fi
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_Group_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Group_name(ctx, field)
-			case "teacherName":
-				return ec.fieldContext_Group_teacherName(ctx, field)
-			case "level":
-				return ec.fieldContext_Group_level(ctx, field)
-			case "start_at":
-				return ec.fieldContext_Group_start_at(ctx, field)
-			case "started_date":
-				return ec.fieldContext_Group_started_date(ctx, field)
-			case "days_week":
-				return ec.fieldContext_Group_days_week(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Group_createdAt(ctx, field)
+			case "items":
+				return ec.fieldContext_PaginatedResult_items(ctx, field)
+			case "totalPage":
+				return ec.fieldContext_PaginatedResult_totalPage(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Group", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type PaginatedResult", field.Name)
 		},
 	}
 	defer func() {
@@ -2525,7 +2643,7 @@ func (ec *executionContext) _Query_getCollection(ctx context.Context, field grap
 	}
 	res := resTmp.([]*model.Collection)
 	fc.Result = res
-	return ec.marshalNCollection2ᚕᚖedu_v2ᚋgraphᚋmodelᚐCollectionᚄ(ctx, field.Selections, res)
+	return ec.marshalNCollection2ᚕᚖedu_v2ᚋgraphᚋmodelᚐCollection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getCollection(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2697,14 +2815,11 @@ func (ec *executionContext) _Query_getStudentTestExams(ctx context.Context, fiel
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.UserCollectionTestExams)
+	res := resTmp.(*model.PaginatedResult)
 	fc.Result = res
-	return ec.marshalNUserCollectionTestExams2ᚕᚖedu_v2ᚋgraphᚋmodelᚐUserCollectionTestExamsᚄ(ctx, field.Selections, res)
+	return ec.marshalOPaginatedResult2ᚖedu_v2ᚋgraphᚋmodelᚐPaginatedResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getStudentTestExams(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2715,20 +2830,12 @@ func (ec *executionContext) fieldContext_Query_getStudentTestExams(ctx context.C
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "collectionId":
-				return ec.fieldContext_UserCollectionTestExams_collectionId(ctx, field)
-			case "answerField":
-				return ec.fieldContext_UserCollectionTestExams_answerField(ctx, field)
-			case "requestGroup":
-				return ec.fieldContext_UserCollectionTestExams_requestGroup(ctx, field)
-			case "trueCount":
-				return ec.fieldContext_UserCollectionTestExams_trueCount(ctx, field)
-			case "falseCount":
-				return ec.fieldContext_UserCollectionTestExams_falseCount(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_UserCollectionTestExams_createdAt(ctx, field)
+			case "items":
+				return ec.fieldContext_PaginatedResult_items(ctx, field)
+			case "totalPage":
+				return ec.fieldContext_PaginatedResult_totalPage(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type UserCollectionTestExams", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type PaginatedResult", field.Name)
 		},
 	}
 	defer func() {
@@ -2768,9 +2875,9 @@ func (ec *executionContext) _Query_getStudentsList(ctx context.Context, field gr
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Student)
+	res := resTmp.(*model.PaginatedResult)
 	fc.Result = res
-	return ec.marshalOStudent2ᚕᚖedu_v2ᚋgraphᚋmodelᚐStudent(ctx, field.Selections, res)
+	return ec.marshalOPaginatedResult2ᚖedu_v2ᚋgraphᚋmodelᚐPaginatedResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getStudentsList(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2781,14 +2888,12 @@ func (ec *executionContext) fieldContext_Query_getStudentsList(ctx context.Conte
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "fullName":
-				return ec.fieldContext_Student_fullName(ctx, field)
-			case "phoneNumber":
-				return ec.fieldContext_Student_phoneNumber(ctx, field)
-			case "id":
-				return ec.fieldContext_Student_id(ctx, field)
+			case "items":
+				return ec.fieldContext_PaginatedResult_items(ctx, field)
+			case "totalPage":
+				return ec.fieldContext_PaginatedResult_totalPage(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Student", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type PaginatedResult", field.Name)
 		},
 	}
 	defer func() {
@@ -2799,6 +2904,64 @@ func (ec *executionContext) fieldContext_Query_getStudentsList(ctx context.Conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_getStudentsList_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_searchStudent(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_searchStudent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().SearchStudent(rctx, fc.Args["value"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.PaginatedResult)
+	fc.Result = res
+	return ec.marshalOPaginatedResult2ᚖedu_v2ᚋgraphᚋmodelᚐPaginatedResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_searchStudent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "items":
+				return ec.fieldContext_PaginatedResult_items(ctx, field)
+			case "totalPage":
+				return ec.fieldContext_PaginatedResult_totalPage(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PaginatedResult", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_searchStudent_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -5212,6 +5375,36 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(_ context.Context
 
 // region    ************************** interface.gotpl ***************************
 
+func (ec *executionContext) _PaginatedItems(ctx context.Context, sel ast.SelectionSet, obj model.PaginatedItems) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.Group:
+		return ec._Group(ctx, sel, &obj)
+	case *model.Group:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Group(ctx, sel, obj)
+	case model.UserCollectionTestExams:
+		return ec._UserCollectionTestExams(ctx, sel, &obj)
+	case *model.UserCollectionTestExams:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._UserCollectionTestExams(ctx, sel, obj)
+	case model.Student:
+		return ec._Student(ctx, sel, &obj)
+	case *model.Student:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Student(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
@@ -5318,7 +5511,7 @@ func (ec *executionContext) _Collection(ctx context.Context, sel ast.SelectionSe
 	return out
 }
 
-var groupImplementors = []string{"Group"}
+var groupImplementors = []string{"Group", "PaginatedItems"}
 
 func (ec *executionContext) _Group(ctx context.Context, sel ast.SelectionSet, obj *model.Group) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, groupImplementors)
@@ -5497,6 +5690,44 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 	return out
 }
 
+var paginatedResultImplementors = []string{"PaginatedResult"}
+
+func (ec *executionContext) _PaginatedResult(ctx context.Context, sel ast.SelectionSet, obj *model.PaginatedResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, paginatedResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PaginatedResult")
+		case "items":
+			out.Values[i] = ec._PaginatedResult_items(ctx, field, obj)
+		case "totalPage":
+			out.Values[i] = ec._PaginatedResult_totalPage(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var queryImplementors = []string{"Query"}
 
 func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -5604,16 +5835,13 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		case "getStudentTestExams":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
 				res = ec._Query_getStudentTestExams(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -5633,6 +5861,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getStudentsList(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "searchStudent":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_searchStudent(ctx, field)
 				return res
 			}
 
@@ -5717,7 +5964,7 @@ func (ec *executionContext) _Response(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
-var studentImplementors = []string{"Student"}
+var studentImplementors = []string{"Student", "PaginatedItems"}
 
 func (ec *executionContext) _Student(ctx context.Context, sel ast.SelectionSet, obj *model.Student) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, studentImplementors)
@@ -5766,7 +6013,7 @@ func (ec *executionContext) _Student(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
-var userCollectionTestExamsImplementors = []string{"UserCollectionTestExams"}
+var userCollectionTestExamsImplementors = []string{"UserCollectionTestExams", "PaginatedItems"}
 
 func (ec *executionContext) _UserCollectionTestExams(ctx context.Context, sel ast.SelectionSet, obj *model.UserCollectionTestExams) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, userCollectionTestExamsImplementors)
@@ -6204,7 +6451,7 @@ func (ec *executionContext) marshalNCollection2edu_v2ᚋgraphᚋmodelᚐCollecti
 	return ec._Collection(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCollection2ᚕᚖedu_v2ᚋgraphᚋmodelᚐCollectionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Collection) graphql.Marshaler {
+func (ec *executionContext) marshalNCollection2ᚕᚖedu_v2ᚋgraphᚋmodelᚐCollection(ctx context.Context, sel ast.SelectionSet, v []*model.Collection) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -6228,7 +6475,7 @@ func (ec *executionContext) marshalNCollection2ᚕᚖedu_v2ᚋgraphᚋmodelᚐCo
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNCollection2ᚖedu_v2ᚋgraphᚋmodelᚐCollection(ctx, sel, v[i])
+			ret[i] = ec.marshalOCollection2ᚖedu_v2ᚋgraphᚋmodelᚐCollection(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -6238,12 +6485,6 @@ func (ec *executionContext) marshalNCollection2ᚕᚖedu_v2ᚋgraphᚋmodelᚐCo
 
 	}
 	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
 
 	return ret
 }
@@ -6266,16 +6507,6 @@ func (ec *executionContext) unmarshalNDaysWeek2edu_v2ᚋgraphᚋmodelᚐDaysWeek
 
 func (ec *executionContext) marshalNDaysWeek2edu_v2ᚋgraphᚋmodelᚐDaysWeek(ctx context.Context, sel ast.SelectionSet, v model.DaysWeek) graphql.Marshaler {
 	return v
-}
-
-func (ec *executionContext) marshalNGroup2ᚖedu_v2ᚋgraphᚋmodelᚐGroup(ctx context.Context, sel ast.SelectionSet, v *model.Group) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._Group(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNGroupLevel2edu_v2ᚋgraphᚋmodelᚐGroupLevel(ctx context.Context, v interface{}) (model.GroupLevel, error) {
@@ -6386,60 +6617,6 @@ func (ec *executionContext) marshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋg
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) marshalNUserCollectionTestExams2ᚕᚖedu_v2ᚋgraphᚋmodelᚐUserCollectionTestExamsᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UserCollectionTestExams) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNUserCollectionTestExams2ᚖedu_v2ᚋgraphᚋmodelᚐUserCollectionTestExams(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNUserCollectionTestExams2ᚖedu_v2ᚋgraphᚋmodelᚐUserCollectionTestExams(ctx context.Context, sel ast.SelectionSet, v *model.UserCollectionTestExams) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._UserCollectionTestExams(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -6728,6 +6905,13 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
+func (ec *executionContext) marshalOCollection2ᚖedu_v2ᚋgraphᚋmodelᚐCollection(ctx context.Context, sel ast.SelectionSet, v *model.Collection) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Collection(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalOGroup2ᚕᚖedu_v2ᚋgraphᚋmodelᚐGroup(ctx context.Context, sel ast.SelectionSet, v []*model.Group) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -6765,53 +6949,6 @@ func (ec *executionContext) marshalOGroup2ᚕᚖedu_v2ᚋgraphᚋmodelᚐGroup(c
 
 	}
 	wg.Wait()
-
-	return ret
-}
-
-func (ec *executionContext) marshalOGroup2ᚕᚖedu_v2ᚋgraphᚋmodelᚐGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Group) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNGroup2ᚖedu_v2ᚋgraphᚋmodelᚐGroup(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
 
 	return ret
 }
@@ -6855,23 +6992,14 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return res
 }
 
-func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := graphql.UnmarshalString(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+func (ec *executionContext) marshalOPaginatedItems2edu_v2ᚋgraphᚋmodelᚐPaginatedItems(ctx context.Context, sel ast.SelectionSet, v model.PaginatedItems) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	res := graphql.MarshalString(*v)
-	return res
+	return ec._PaginatedItems(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOStudent2ᚕᚖedu_v2ᚋgraphᚋmodelᚐStudent(ctx context.Context, sel ast.SelectionSet, v []*model.Student) graphql.Marshaler {
+func (ec *executionContext) marshalOPaginatedItems2ᚕedu_v2ᚋgraphᚋmodelᚐPaginatedItems(ctx context.Context, sel ast.SelectionSet, v []model.PaginatedItems) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -6898,7 +7026,7 @@ func (ec *executionContext) marshalOStudent2ᚕᚖedu_v2ᚋgraphᚋmodelᚐStude
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOStudent2ᚖedu_v2ᚋgraphᚋmodelᚐStudent(ctx, sel, v[i])
+			ret[i] = ec.marshalOPaginatedItems2edu_v2ᚋgraphᚋmodelᚐPaginatedItems(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -6912,11 +7040,27 @@ func (ec *executionContext) marshalOStudent2ᚕᚖedu_v2ᚋgraphᚋmodelᚐStude
 	return ret
 }
 
-func (ec *executionContext) marshalOStudent2ᚖedu_v2ᚋgraphᚋmodelᚐStudent(ctx context.Context, sel ast.SelectionSet, v *model.Student) graphql.Marshaler {
+func (ec *executionContext) marshalOPaginatedResult2ᚖedu_v2ᚋgraphᚋmodelᚐPaginatedResult(ctx context.Context, sel ast.SelectionSet, v *model.PaginatedResult) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec._Student(ctx, sel, v)
+	return ec._PaginatedResult(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalString(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalString(*v)
+	return res
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

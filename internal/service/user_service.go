@@ -13,6 +13,6 @@ func NewUserService(userRepo *repository.UserRepository) *UserService {
 	return &UserService{userRepo: userRepo}
 }
 
-func (s *UserService) GetStudentsList(page *int, size *int) ([]*model.Student, error) {
+func (s *UserService) GetStudentsList(page *int, size *int) (*model.PaginatedResult, error) {
 	return s.userRepo.GetStudentsList(page, size)
 }

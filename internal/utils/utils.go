@@ -61,3 +61,14 @@ func SendMessage(message string, chatId int64) {
 		return
 	}
 }
+
+func CalculateTotalPages(totalRecords int, size *int) int {
+	if *size == 0 {
+		return 0
+	}
+	totalPages := totalRecords / *size
+	if totalRecords%*size > 0 {
+		totalPages++
+	}
+	return totalPages
+}

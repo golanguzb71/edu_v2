@@ -8,6 +8,10 @@ import (
 	"strconv"
 )
 
+type PaginatedItems interface {
+	IsPaginatedItems()
+}
+
 type AnswerField struct {
 	StudentAnswer *string `json:"studentAnswer,omitempty"`
 	TrueAnswer    string  `json:"trueAnswer"`
@@ -33,7 +37,14 @@ type Group struct {
 	CreatedAt   string     `json:"createdAt"`
 }
 
+func (Group) IsPaginatedItems() {}
+
 type Mutation struct {
+}
+
+type PaginatedResult struct {
+	Items     []PaginatedItems `json:"items,omitempty"`
+	TotalPage *int             `json:"totalPage,omitempty"`
 }
 
 type Query struct {
@@ -50,6 +61,8 @@ type Student struct {
 	ID          string `json:"id"`
 }
 
+func (Student) IsPaginatedItems() {}
+
 type UserCollectionTestExams struct {
 	CollectionID string         `json:"collectionId"`
 	AnswerField  []*AnswerField `json:"answerField"`
@@ -58,6 +71,8 @@ type UserCollectionTestExams struct {
 	FalseCount   *int           `json:"falseCount,omitempty"`
 	CreatedAt    string         `json:"createdAt"`
 }
+
+func (UserCollectionTestExams) IsPaginatedItems() {}
 
 type DaysWeek string
 

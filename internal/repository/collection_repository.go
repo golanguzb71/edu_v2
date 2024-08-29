@@ -60,7 +60,7 @@ func (r *CollectionRepository) Delete(id int) error {
 	return nil
 }
 func (r *CollectionRepository) GetCollections() ([]*model.Collection, error) {
-	rows, err := r.db.Query(`SELECT id, title, questions, created_at , is_active FROM collections`)
+	rows, err := r.db.Query(`SELECT id, title, questions, created_at , is_active FROM collections order by is_active`)
 	if err != nil {
 		return nil, err
 	}
