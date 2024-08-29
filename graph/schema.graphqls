@@ -75,7 +75,7 @@ type Query {
     getCollectionActive:Collection!
     getStudentTestExams(code:String, studentId:ID , page:Int , size:Int):PaginatedResult
     getStudentsList(code:String!,page:Int , size:Int):PaginatedResult
-    searchStudent(value:String!):PaginatedResult
+    searchStudent(value:String!, page:Int , size:Int):PaginatedResult
 }
 
 

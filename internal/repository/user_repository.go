@@ -52,3 +52,55 @@ func (r *UserRepository) GetStudentsList(page *int, size *int) (*model.Paginated
 		TotalPage: &totalPages,
 	}, nil
 }
+
+func (r *UserRepository) SearchStudent(value string, page, size *int) (*model.PaginatedResult, error) {
+	if value == "" {
+		return nil, errors.New("value not inserted")
+	}
+
+	offset := utils.OffSetGenerator(page, size)
+
+	var query string
+	var args []interface{}
+
+	if value[0] == '+' {
+		// Phone number search with wildcards
+		query = `SELECT id, phone_number, full_name FROM users WHERE phone_number LIKE $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+		args = []interface{}{"%" + value[1:] + "%", *size, offset}
+	} else {
+		// Full name search with wildcards
+		query = `SELECT id, phone_number, full_name FROM users WHERE full_name LIKE $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+		args = []interface{}{"%" + value + "%", *size, offset}
+	}
+
+	// Count query for total records
+	countQuery := `SELECT COUNT(*) FROM users WHERE phone_number LIKE $1 OR full_name LIKE $2`
+	var totalRecords int
+	err := r.db.QueryRow(countQuery, "%"+value+"%", "%"+value+"%").Scan(&totalRecords)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var students []model.PaginatedItems
+	for rows.Next() {
+		var student model.Student
+		err = rows.Scan(&student.ID, &student.PhoneNumber, &student.FullName)
+		if err != nil {
+			return nil, err
+		}
+		students = append(students, student)
+	}
+
+	totalPages := utils.CalculateTotalPages(totalRecords, size)
+
+	return &model.PaginatedResult{
+		Items:     students,
+		TotalPage: &totalPages,
+	}, nil
+}

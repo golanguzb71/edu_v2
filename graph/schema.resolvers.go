@@ -159,8 +159,8 @@ func (r *queryResolver) GetStudentsList(ctx context.Context, code string, page *
 }
 
 // SearchStudent is the resolver for the searchStudent field.
-func (r *queryResolver) SearchStudent(ctx context.Context, value string) (*model.PaginatedResult, error) {
-	return nil, nil
+func (r *queryResolver) SearchStudent(ctx context.Context, value string, page *int, size *int) (*model.PaginatedResult, error) {
+	return r.UserService.SearchStudent(value, page, size)
 }
 
 // Mutation returns MutationResolver implementation.
