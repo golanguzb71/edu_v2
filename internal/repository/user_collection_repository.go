@@ -104,11 +104,9 @@ func studentTestExamsForStudent(rows *sql.Rows, r *UserCollectionRepository) ([]
 
 		if level != "" {
 			var group model.Group
-			err = r.db.QueryRow(`SELECT id, name, teacher_name, level, start_time, started_date, days_week, created_at FROM groups WHERE level=$1`, level).
+			_ = r.db.QueryRow(`SELECT id, name, teacher_name, level, start_time, started_date, days_week, created_at FROM groups WHERE level=$1`, level).
 				Scan(&group.ID, &group.Name, &group.TeacherName, &group.Level, &group.StartAt, &group.StartedDate, &group.DaysWeek, &group.CreatedAt)
-			if err != nil {
-				return nil, err
-			}
+
 			UCT.RequestGroup = append(UCT.RequestGroup, &group)
 		}
 		UCTL = append(UCTL, UCT)
