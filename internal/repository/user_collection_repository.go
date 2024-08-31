@@ -191,16 +191,18 @@ func determineLevel(trueCount, totalQuestions int) string {
 	percentage := float64(trueCount) / float64(totalQuestions) * 100
 
 	switch {
-	case percentage <= 20:
+	case percentage < 10:
 		return "BEGINNER"
-	case percentage <= 40:
+	case percentage < 25:
 		return "ELEMENTARY"
-	case percentage <= 60:
+	case percentage < 40:
 		return "PRE_INTERMEDIATE"
-	case percentage <= 80:
+	case percentage < 60:
 		return "INTERMEDIATE"
-	case percentage > 80:
+	case percentage < 80:
 		return "UPPER_INTERMEDIATE"
+	case percentage >= 80:
+		return "ADVANCED"
 	default:
 		return ""
 	}
